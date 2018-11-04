@@ -1,9 +1,13 @@
-var express = require('express');
-var router = express.Router();
+const express = require( 'express' );
+const router  = express.Router();
+const version = require( '../package.json' )[ 'version' ];
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+router.get( '/', ( req, res, next ) => {
+  res.status( 200 ).json({ message: `Hello My Financial Control Api v${version}` });
+});
+
+router.post( '/', ( req, res, next ) => {
+  res.status( 200 ).json({ message: `Hello My Financial Control Api v${version}` });
 });
 
 module.exports = router;
