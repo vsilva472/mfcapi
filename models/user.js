@@ -2,6 +2,13 @@
 
 const bcrypt = require( 'bcrypt' );
 
+const encryptPassword  = async function ( user ) {
+  if ( user.changed( 'password' ) ) {
+    const salt = await bcrypt.genSalt( 10 );
+    user.password = await bcrypt.hash( user.password.toString(), salt );
+  }
+};
+
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
@@ -12,10 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     password_reset_expires: DataTypes.DATE,
   }, {
     hooks: {
-      beforeCreate: async function ( user ) {
-        const salt = await bcrypt.genSalt( 10 );
-        user.password = await bcrypt.hash( user.password.toString(), salt );
-      }
+      beforeCreate: encryptPassword,
+      beforeUpdate: encryptPassword
     }
   });
   User.associate = function(models) {
@@ -25,5 +30,6 @@ module.exports = (sequelize, DataTypes) => {
   User.prototype.comparePassword = async function ( password ) {
     return await bcrypt.compare( password.toString(), this.password );
   }
+  
   return User;
 };

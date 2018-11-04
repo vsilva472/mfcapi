@@ -76,10 +76,44 @@ exports.PasswordRecover = async ( req, res, next ) => {
         return onSuccess();
     }
     catch ( e ) {
-        console.log( e );
         res.status( 500 ).json({ 
             message: 'Ocorreu um no processo de recuperação de senha.', 
             error: e
         });
+    }
+};
+
+exports.PasswordReset = async ( req, res, next ) => {
+    const { email, password } = req.body;
+    const token = req.params.token;
+
+    try {
+        const errors = validationResult( req );
+        const now    = new Date();
+        
+        if ( ! errors.isEmpty() ) return res.status( 422 ).json({ errors: errors.array() });
+
+        const user = await repository.findOne( { email });
+
+        if ( ! user ) 
+            return res.status( 400 ).json({ message: 'Usuário não encontrado.' });
+
+        if ( token !== user.password_reset_token )  
+            return res.status( 400 ).json({ message: 'Token inválido' });
+
+        if ( now > user.password_reset_expires )
+            return res.status( 400 ).json({ message: 'Seu token expirou. Por favor refaça o processo para recuperar senha.' });
+
+        await repository.update( user, { 
+            password: password,
+            password_reset_token: null, 
+            password_reset_expires: null
+         });
+
+        // TODO send email to user notifying that your password was changed
+        return res.status( 200 ).json( { message: 'Nova senha criada com sucesso.' } );
+    }
+    catch ( e ) {
+        res.status( 500 ).json( { message: 'Erro ao reinicializar a senha', error: e } );
     }
 };
