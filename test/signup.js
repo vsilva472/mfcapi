@@ -7,8 +7,6 @@ const route         = '/auth/signup';
 
 const { name, email, password, password_conf }  = require( './mocks/user' );
 
-console.log( name );
-
 describe( "#Signup - Steps to validate a user signup",  () => {
     beforeEach( async function () {
         await User.sync();
@@ -83,9 +81,6 @@ describe( "#Signup - Steps to validate a user signup",  () => {
             .send( { name, email, password, password_conf } )
             .expect('Content-Type', /json/)
             .expect( 201 )
-            .end( function ( err, res ) {
-                //console.log( res );
-                done();
-            } );
+            .end( done );
     });
 });

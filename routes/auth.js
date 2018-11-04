@@ -7,5 +7,6 @@ const noAuth      = require( '../middlewares/no-auth' );
 const controller  = require( '../controllers/auth' );
 
 router.post( '/signup',   [ noAuth ].concat( validator.signup ), controller.signup );
+router.post( '/signin',   [ noAuth ].concat( validator.signin ), controller.signin );
 
 module.exports = router;
