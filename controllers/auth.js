@@ -1,11 +1,11 @@
 const { validationResult }  = require( 'express-validator/check' );
-
-const repository            = require( '../repositories/user' );
-
 const jwt                   = require( 'jsonwebtoken' );
+
+const randomDigits          = require( '../modules/random-numbers' );
+const repository            = require( '../repositories/user' );
 const jwtConfig             = require( '../config/jwt' );
 
-exports.signup = async ( req, res, next ) => {
+exports.Signup = async ( req, res, next ) => {
     try {
         const errors    = validationResult( req );
 
@@ -22,7 +22,7 @@ exports.signup = async ( req, res, next ) => {
     }
 };
 
-exports.signin = async ( req, res, next ) => {
+exports.Signin = async ( req, res, next ) => {
     try {
         const { email, password } = req.body;
         const errors = validationResult( req );
@@ -45,5 +45,45 @@ exports.signin = async ( req, res, next ) => {
     }
     catch ( e ) {
         res.status( 500 ).send( { message: e } );
+    }
+};
+
+exports.PasswordRecover = async ( req, res, next ) => {
+    try {
+        const errors    = validationResult( req );
+        const { email } = req.body;
+
+        const token     = randomDigits.generate( 9999, true );
+        const now       = new Date();
+
+        const onSuccess   = () => {
+            return res.status( 200 ).json({ 
+                message: 'Se este email existe em nossa base, Foi enviado um email com instruções para criar uma nova senha.' 
+            });
+        };
+        
+        now.setHours( now.getHours() + 1 );
+        
+        if ( ! errors.isEmpty() )
+            return res.status( 422 ).json( { errors: errors.array() } );
+
+        const user = await repository.findOne( { email } );
+
+        if ( ! user ) return onSuccess();
+
+        await repository.update( user, {
+            password_reset_token: token,
+            password_reset_expires: now
+        });
+
+        // TODO send password email
+        return onSuccess();
+    }
+    catch ( e ) {
+        console.log( e );
+        res.status( 500 ).json({ 
+            message: 'Ocorreu um no processo de recuperação de senha.', 
+            error: e
+        });
     }
 };
