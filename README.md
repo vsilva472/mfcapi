@@ -5,7 +5,8 @@ MFCApi is a api to be consumed by My Financial Control Frontend
 - Clone this repository `git clone https://github.com/vsilva472/mfcapi.git`
 - In a terminal navigate to repository folder `$ cd <PATH TO REPOSITORY>/mfcapi`
 - Run installer command `$ npm install`
-
+- Copy and rename  config/config.examplate.json to config.json
+- Fill config/config.json with your database credentials
 
 ### License
 MIT
