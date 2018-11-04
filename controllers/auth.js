@@ -51,12 +51,12 @@ exports.Signin = async ( req, res, next ) => {
 exports.PasswordRecover = async ( req, res, next ) => {
     try {
         const errors    = validationResult( req );
-        const { email } = req.body;
+        const email     = req.body.email;
 
         const token     = randomDigits.generate( 9999, true );
         const now       = new Date();
 
-        const onSuccess   = () => {
+        const onSuccess = () => {
             return res.status( 200 ).json({ 
                 message: 'Se este email existe em nossa base, Foi enviado um email com instruções para criar uma nova senha.' 
             });
@@ -64,17 +64,13 @@ exports.PasswordRecover = async ( req, res, next ) => {
         
         now.setHours( now.getHours() + 1 );
         
-        if ( ! errors.isEmpty() )
-            return res.status( 422 ).json( { errors: errors.array() } );
+        if ( ! errors.isEmpty() ) return res.status( 422 ).json( { errors: errors.array() } );
 
         const user = await repository.findOne( { email } );
 
         if ( ! user ) return onSuccess();
 
-        await repository.update( user, {
-            password_reset_token: token,
-            password_reset_expires: now
-        });
+        await repository.update( user, { password_reset_token: token, password_reset_expires: now });
 
         // TODO send password email
         return onSuccess();

@@ -7,7 +7,7 @@ const route         = '/auth/signup';
 
 const { name, email, password, password_conf }  = require( './mocks/user' );
 
-describe( "#Signup - Steps to validate a user signup",  () => {
+describe( "#Signup",  () => {
     beforeEach( async function () {
         await User.sync();
     });

@@ -8,7 +8,7 @@ const route         = '/auth/password/recover';
 const { name, email, password, password_conf }  = require( './mocks/user' );
 
 
-describe( "#Controller Password Recover()",  () => {
+describe( "#Password Recover",  () => {
     beforeEach( async function () {
         await User.sync({force: true});
         await User.create({ name, email, password, password_conf });
@@ -44,7 +44,7 @@ describe( "#Controller Password Recover()",  () => {
             .post( route )
             .send( { email } )
             .end( function ( err, res ) {
-                User.findOne({ where: { email } }).then( user => {
+               User.findOne({ where: { email } }).then( user => {
                     expect( res.status ).to.equal(200);
                     expect( user.password_reset_token.length ).to.equal( 4 );
                     expect( typeof user.password_reset_expires ).to.equal( 'object' );

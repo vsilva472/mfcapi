@@ -7,7 +7,7 @@ const route         = '/auth/signin';
 
 const { name, email, password, password_conf }  = require( './mocks/user' );
 
-describe( "#Controller Singnin()",  () => {
+describe( "#Signin",  () => {
     beforeEach( async function () {
         await User.sync();
         await User.create({ name, email, password, password_conf });
