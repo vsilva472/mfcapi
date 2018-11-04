@@ -2,3 +2,5 @@
 .idea
 node_modules
 config/config.json
+config/jwt.json
+config/mail.json
