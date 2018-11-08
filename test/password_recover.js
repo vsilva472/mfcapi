@@ -2,7 +2,7 @@ const express       = require( '../app' );
 const supertest     = require( 'supertest' )( express );
 const expect        = require( 'chai' ).expect;
 
-const User          = require( '../models' ).User;
+const models        = require( '../models' );
 const route         = '/auth/password/recover';
 
 const { name, email, password, password_conf }  = require( './mocks/user' );
@@ -25,12 +25,11 @@ describe( "#Password Recover",  () => {
 
     describe( "#With access to database",  () => {
         beforeEach( async function () {
-            await User.sync();
-            await User.create({ name, email, password, password_conf });
-        });
-    
-        afterEach( async () => {
-            await User.destroy({ truncate: true });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+            models.sequelize.options.maxConcurrentQueries = 1;
+            await models.User.sync({ force: true });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+            await models.User.create({ name, email, password, password_conf });
         });
     
         it( '#Non existing email requests must receive SUCCESS status', done => {
@@ -47,7 +46,7 @@ describe( "#Password Recover",  () => {
                 .post( route )
                 .send( { email } )
                 .end( function ( err, res ) {
-                   User.findOne({ where: { email } }).then( user => {
+                   models.User.findOne({ where: { email } }).then( user => {
                         expect( res.status ).to.equal(200);
                         expect( user.password_reset_token.length ).to.equal( 4 );
                         expect( typeof user.password_reset_expires ).to.equal( 'object' );

@@ -1,8 +1,7 @@
 const express       = require( '../app' );
 const supertest     = require( 'supertest' )( express );
-const expect        = require( 'chai' ).expect;
 
-const User          = require( '../models' ).User;
+const models          = require( '../models' );
 const route         = '/auth/signup';
 
 const { name, email, password, password_conf }  = require( './mocks/user' );
@@ -58,11 +57,10 @@ describe( "#Signup",  () => {
 
     describe( "#With Access to database",  () => {
         beforeEach( async function () {
-            await User.sync();
-        });
-
-        afterEach(async () => {
-            await User.destroy({ truncate: true });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+            models.sequelize.options.maxConcurrentQueries = 1;
+            await models.User.sync({ force: true });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
         });
 
         it( '#Email must be unique inside database', done => {        

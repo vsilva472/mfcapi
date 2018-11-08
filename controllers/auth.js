@@ -35,7 +35,7 @@ exports.Signin = async ( req, res, next ) => {
         if ( ! user || ! await user.comparePassword( password ) ) 
             return res.status( 401 ).json( { message: 'Email e/ou Senha inválidos.' } );
 
-        const token     = jwt.sign({ id: user.id }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        const token = jwt.sign({ id: user.id }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
         
         res.status( 200 ).json({ user: {
             id: user.id,
