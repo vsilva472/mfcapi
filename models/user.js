@@ -12,11 +12,34 @@ const encryptPassword  = async function ( user ) {
 
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
-    name: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    password_reset_token: DataTypes.STRING,
-    password_reset_expires: DataTypes.DATE,
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER(11)
+    },
+    name: {
+      type: DataTypes.STRING(20),
+      allowNull: false
+    },
+    email: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    password_reset_token: {
+      type: DataTypes.STRING(4),
+      allowNull: true,
+      defaultValue: null
+    },
+    password_reset_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null
+    },
   }, {
     hooks: {
       beforeCreate: encryptPassword,
@@ -25,6 +48,20 @@ module.exports = (sequelize, DataTypes) => {
   });
   User.associate = function(models) {
     // associations can be defined here
+    User.hasMany( models.Category, {
+      foreignKey: 'UserId',
+      onDelete: 'CASCADE'
+    });
+
+    User.hasMany( models.Entry, {
+      foreignKey: 'UserId',
+      onDelete: 'CASCADE'
+    });
+
+    User.hasMany( models.Favorite, {
+      foreignKey: 'UserId',
+      onDelete: 'CASCADE'
+    });
   };
 
   User.prototype.comparePassword = async function ( password ) {

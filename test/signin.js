@@ -2,14 +2,17 @@ const express       = require( '../app' );
 const supertest     = require( 'supertest' )( express );
 const expect        = require( 'chai' ).expect;
 
-const User          = require( '../models' ).User;
+const models        = require( '../models' );
 const route         = '/auth/signin';
 
 const { name, email, password, password_conf }  = require( './mocks/user' );
 
 describe( "#Singin",  () => {
     beforeEach( async function () {
-        await User.sync();
+        await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+        models.sequelize.options.maxConcurrentQueries = 1;
+        await models.User.sync({ force: true });
+        await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
     });
 
     describe( "#Without access to database",  () => {
@@ -50,12 +53,13 @@ describe( "#Singin",  () => {
 
     describe( "#With access to database",  () => {
         beforeEach( async function () {
-            await User.create({ name, email, password, password_conf });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+            models.sequelize.options.maxConcurrentQueries = 1;
+            await models.User.sync({ force: true });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+            await models.User.create({ name, email, password, password_conf });
         });
     
-        afterEach( async () => {
-            await User.destroy({ truncate: true });
-        });
     
         it( '#After succesfull signin. Response must NOT INCLUDE password AND INCLUDE user name, user email, token', done => {
             const credentials = { email, password };

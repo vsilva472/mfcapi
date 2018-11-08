@@ -2,7 +2,7 @@ const express       = require( '../app' );
 const supertest     = require( 'supertest' )( express );
 const expect        = require( 'chai' ).expect;
 
-const User          = require( '../models' ).User;
+const models        = require( '../models' );
 const routeBase     = '/auth/password/reset/';
 const routeWithFakeToken =  `${routeBase}mytonken`;
 
@@ -56,14 +56,13 @@ describe( "#Password Reset",  () => {
     
     describe( "#With access to database",  () => {
         beforeEach( async function () {
-            await User.sync();
-            await User.create({ name, email, password, password_conf });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+            models.sequelize.options.maxConcurrentQueries = 1;
+            await models.User.sync({ force: true });
+            await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+            await models.User.create({ name, email, password, password_conf });
         });
-    
-        afterEach( async () => {
-            await User.destroy({ truncate: true });
-        }); 
-    
+
         it( '#Token Expired is not allowed to reset password', done => {
             // at this test token can be anything
             const credentials = { email, password, password_conf };
@@ -71,14 +70,14 @@ describe( "#Password Reset",  () => {
             const now = new Date();
             now.setHours( now.getHours() + 1 );
     
-            User.findOne( { where: { email: email } } );
+            models.User.findOne( { where: { email: email } } );
     
             supertest
                 .post( '/auth/password/recover' )
                 .send( { email: credentials.email })
                 .end( async function (err, req ) {
                     // get current user
-                    const user = await User
+                    const user = await models.User
                             .findOne({ where: { email: credentials.email } });
     
                     // make a date expired
@@ -108,7 +107,7 @@ describe( "#Password Reset",  () => {
                 .send( { email: credentials.email })
                 .end( async function (err, req ) {
                     // get current user
-                    const oldUser = await User
+                    const oldUser = await models.User
                             .findOne( {where: { email: credentials.email }});
     
                     // make a post to test this condition
@@ -119,7 +118,7 @@ describe( "#Password Reset",  () => {
                         .expect( 200 )
                         .end( async function ( err, res ) {
                             // old passwor cannot be equals same password
-                            const newUser = await User
+                            const newUser = await models.User
                                 .findOne( {where: { email: credentials.email }});
                             
                             expect( newUser.password ).to.not.equals( credentials.password );

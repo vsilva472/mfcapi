@@ -1,5 +1,5 @@
 const jwt           = require( 'jsonwebtoken' );
-const { secret }    = require( '../config/auth' ); 
+const { secret }    = require( '../config/jwt' ); 
 
 module.exports = ( req, res, next ) => {
     const authHeader = req.headers.authorization;
@@ -8,10 +8,10 @@ module.exports = ( req, res, next ) => {
         return res.status( 401 ).send({ message: 'No token provided' });
     
     const tokenParts = authHeader.split( ' ' );
-
+    
     if ( ! tokenParts.length === 2 ) return res.status( 401 ).send({ message: 'Token error' });
 
-    const [ scheme, token ] = parts;
+    const [ scheme, token ] = tokenParts;
 
     if ( ! /^Bearer$/i.test( scheme ) ) return res.status( 401 ).send({ message: 'Token type error' });
     
@@ -20,7 +20,7 @@ module.exports = ( req, res, next ) => {
     jwt.verify( token, secret, ( err, decoded ) => {
         if ( err )  return res.status( 401 ).send({ message: 'Token invalid' });
 
-        req.user_id = decoded.id;
+        req.userId = decoded.id;
         return next();
     });
 };
