@@ -12,7 +12,7 @@ exports.create = async ( data ) => {
 
 exports.findOne = async ( where ) => {
     // const category = await Category.findOne( { where: where } );
-    const category = await Category.findOne({ where: { id: 1, UserId: 1 } });
+    const category = await Category.findOne({ where: where });
     return category;
 };
 

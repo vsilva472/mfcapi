@@ -11,10 +11,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(20),
       allowNull: false
     },
-    color: {
-      type: DataTypes.STRING(7),
-      allowNull: false
-    },
     type: {
       type: DataTypes.INTEGER(1),
       allowNull: false
@@ -30,6 +26,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'UserId',
       onDelete: 'CASCADE'
     });
+
+    Favorite.belongsToMany(models.Category, {
+        through: 'CategoryFavorites',
+        foreignKey: 'FavoriteId'
+    });
   };
+
   return Favorite;
 };

@@ -12,10 +12,6 @@ module.exports = {
         type: Sequelize.STRING(20),
         allowNull: false
       },
-      color: {
-        type: Sequelize.STRING(7),
-        allowNull: false
-      },
       type: {
         type: Sequelize.INTEGER(1),
         allowNull: false
