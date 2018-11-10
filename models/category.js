@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'UserId',
       onDelete: 'CASCADE'
     });
+
+    Category.belongsToMany( models.Favorite, {
+        through: 'CategoryFavorites',
+        foreignKey: 'CategoryId'
+    });
   };
   return Category;
 };

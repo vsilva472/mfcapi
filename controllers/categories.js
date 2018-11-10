@@ -13,21 +13,21 @@ exports.index = async ( req, res, next ) => {
 };
 
 exports.create = async ( req, res, next ) => {
-    try {
-        const { label, color } = req.body;
-        const errors    = validationResult( req );
+        try {
+            const { label, color } = req.body;
+            const errors    = validationResult( req );
 
-        if ( ! errors.isEmpty() ) 
-            return res.status( 422 ).json({ errors: errors.array() });
+            if ( ! errors.isEmpty() ) 
+                return res.status( 422 ).json({ errors: errors.array() });
 
-        var category = await repository.create({ label, color, UserId: req.userId });
-        res.status(201).send({ message: 'Categoria criada com sucesso', data: category });
+            var category = await repository.create({ label, color, UserId: req.userId });
+            res.status(201).send({ message: 'Categoria criada com sucesso', data: category });
 
-    }
-    catch ( e ) {
-        console.log( 'awui' );
-        return res.status( 500 ).json({ message: 'Erro ao criar categoria', error: e });
-    }
+        }
+        catch ( e ) {
+            console.log( 'awui' );
+            return res.status( 500 ).json({ message: 'Erro ao criar categoria', error: e });
+        }
 };
 
 exports.show = async ( req, res, next ) => {
