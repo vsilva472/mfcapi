@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const Entry = sequelize.define('Entry', {
+  const Entry = sequelize.define( 'Entry', {
     id: {
       allowNull: false,
       autoIncrement: true,
@@ -11,17 +11,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(20),
       allowNull: false
     },
-    color: {
-      type: DataTypes.STRING(7),
-      allowNull: false
-    },
     type: {
       type: DataTypes.INTEGER(1),
       allowNull: false
     },
-    price: {
+    value: {
       type: DataTypes.DECIMAL(10,2),
       allowNull: false
+    },
+    registeredAt: {
+      allowNull: false,
+      type: DataTypes.DATE
     }
   }, {});
   Entry.associate = function(models) {
@@ -29,6 +29,11 @@ module.exports = (sequelize, DataTypes) => {
     Entry.belongsTo(models.User, {
       foreignKey: 'UserId',
       onDelete: 'CASCADE'
+    });
+
+    Entry.belongsToMany(models.Category, {
+      through: 'EntryCategories',
+      foreignKey: 'EntryId'
     });
   };
   return Entry;

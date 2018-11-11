@@ -23,8 +23,8 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE'
     });
 
-    Category.belongsToMany( models.Favorite, {
-        through: 'CategoryFavorites',
+    Category.belongsToMany( models.Entry, {
+        through: 'EntryCategories',
         foreignKey: 'CategoryId'
     });
   };

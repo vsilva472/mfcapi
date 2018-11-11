@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER(1),
       allowNull: false
     },
-    price: {
+    value: {
       type: DataTypes.DECIMAL(10,2),
       allowNull: false
     }
@@ -25,11 +25,6 @@ module.exports = (sequelize, DataTypes) => {
     Favorite.belongsTo(models.User, {
       foreignKey: 'UserId',
       onDelete: 'CASCADE'
-    });
-
-    Favorite.belongsToMany(models.Category, {
-        through: 'CategoryFavorites',
-        foreignKey: 'FavoriteId'
     });
   };
 
