@@ -13,13 +13,14 @@ exports.index = async ( req, res, next ) => {
 
 exports.create = async ( req, res, next ) => {
     try {
-        const { label, price, type, CategoryId, UserId } = req.body;
+        const { label, value, type, UserId } = req.body;
         const errors    = validationResult( req );
 
         if ( ! errors.isEmpty() ) 
             return res.status( 422 ).json({ errors: errors.array() });
 
-        var favorite = await repository.create({ label, price, type, UserId });
+        var favorite = await repository.create( { label, value, type, UserId } );
+
         res.status(201).send({ message: 'Favorito adicionado com sucesso', data: favorite });
 
     }
@@ -30,12 +31,12 @@ exports.create = async ( req, res, next ) => {
 
 exports.show = async ( req, res, next ) => {
     try {
-        const data = { id: parseInt(req.params.favorite_id, 10), UserId: req.userId };
+        const data = { id: parseInt(req.params.favorite_id, 10), UserId: req.params.user_id };
         var favorite = await repository.findOne( data );
         
         if ( ! favorite ) return res.status(200).json(null);
     
-        return res.status(200).json({ id: favorite.id, label: favorite.label, price: favorite.price, type: favorite.type, UserId: favorite.UserId });
+        return res.status(200).json({ id: favorite.id, label: favorite.label, value: favorite.value, type: favorite.type, UserId: favorite.UserId });
     }
     catch ( e ) {
         return res.status( 500 ).json({ message: 'Erro localizar Favorito', error: e });

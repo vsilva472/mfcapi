@@ -9,16 +9,12 @@ exports.create = [
         .isBoolean()
         .withMessage( 'Tipo de operação inválido.' ),
 
-    check( 'price' )
+    check( 'value' )
         .isFloat()
         .withMessage( 'Preço inválido.' ),
     
     check( 'UserId' )
         .isInt({gt: 0})
-        .withMessage( 'Usuário inválido.' ),
-
-    check( 'CategoryId' )
-        .isInt({gt: 0})
-        .withMessage( 'Categoria inválida.' )
+        .withMessage( 'Usuário inválido.' )
 
 ];

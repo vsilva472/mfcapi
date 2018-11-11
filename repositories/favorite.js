@@ -6,11 +6,6 @@ exports.allByUserId = async ( user_id ) => {
     return favorites;
 };
 
-exports.allByUserIdWithCategories = async ( user_id ) => {
-    const favorites = await Favorite.findAll( { include: [ Category ], where: { userId: user_id } } );
-    return favorites;
-};
-
 exports.create = async ( data ) => {
     const favorite = await Favorite.create( data );
     return favorite;

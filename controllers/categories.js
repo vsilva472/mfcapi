@@ -32,7 +32,7 @@ exports.create = async ( req, res, next ) => {
 
 exports.show = async ( req, res, next ) => {
     try {
-        var category = await repository.findOne({ id: parseInt(req.params.id, 10), UserId: req.userId });
+        var category = await repository.findOne({ id: parseInt(req.params.category_id, 10), UserId: req.userId });
         
         if ( category ) {
             return res.status(200).json({ id: category.id, label: category.label, color: category.color });

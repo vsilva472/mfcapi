@@ -12,15 +12,11 @@ module.exports = {
         type: Sequelize.STRING(20),
         allowNull: false
       },
-      color: {
-        type: Sequelize.STRING(7),
-        allowNull: false
-      },
       type: {
         type: Sequelize.INTEGER(1),
         allowNull: false
       },
-      price: {
+      value: {
         type: Sequelize.DECIMAL(10,2),
         allowNull: false
       },
@@ -31,6 +27,10 @@ module.exports = {
           model: 'Users',
           key: 'id'
         }
+      },
+      registeredAt: {
+        allowNull: false,
+        type: Sequelize.DATE
       },
       createdAt: {
         allowNull: false,
