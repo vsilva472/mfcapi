@@ -36,4 +36,4 @@ exports.update = async ( params, where ) => {
 
 exports.destroy = async ( where ) => {
     await Entry.destroy( where );
-}
+};

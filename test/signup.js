@@ -1,6 +1,8 @@
 const express       = require( '../app' );
 const supertest     = require( 'supertest' )( express );
 
+const expect = require( 'chai' ).expect;
+
 const models          = require( '../models' );
 const route         = '/auth/signup';
 
@@ -83,6 +85,25 @@ describe( "#Signup",  () => {
                 .expect('Content-Type', /json/)
                 .expect( 201 )
                 .end( done );
+        });
+
+        it( "#Should signup with 'user' as default role even if try to inject role as admin", done => {
+            supertest
+                .post( route )
+                .send( { name, email, password, password_conf, role: 'admin' } )
+                .end( ( err, res ) => {
+                    if ( err ) return done(err);
+
+                    models.User.findOne({ where: { email: email } })
+                    .then( user => {
+                        expect( res.status ).to.be.equal( 201 );
+                        expect( user.id ).to.be.equal( 1 );
+                        expect( user.email ).to.be.equal( email );
+                        expect( user.role ).to.be.equal( 'user' );
+                        done();
+                    })
+                    .catch( err => done( err ) );
+                });
         });
     });    
 });
