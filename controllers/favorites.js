@@ -59,13 +59,26 @@ exports.update = async ( req, res, next ) => {
 
 exports.destroy = async ( req, res, next ) => {
     try {
-        const where     = { UserId: req.params.user_id, id: req.params.favorite_id };
+        const role          = req.role;
+        const UserId        = parseInt(req.params.user_id, 10);
+        const favoriteId    = parseInt(req.params.favorite_id, 10);
+    
+        // select resource
+        const resource = await repository.findOne( { id: favoriteId } );
         
-        await repository.destroy( { where: where } );    
-        return res.status(200).json({ message: "Favorito removida com sucesso." });
+        // resource not found
+        if ( ! resource ) 
+            return res.status( 400 ).json({ message: "Recurso não existe." });
+
+        // user not is owner of resource neither is an admin
+        if ( resource.UserId != UserId && role !== 'admin' ) 
+            return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
+
+        await repository.destroy( { where: { UserId } } );
+        res.status(200).json({ message: "Favorito removida com sucesso." });
     }
     catch ( e ) {
-        console.log( e );
+        //console.log( e );
         return res.status( 500 ).json({ message: 'Erro ao remover favorito', error: e });
     }
 }

@@ -7,7 +7,7 @@ const jwtConfig     = require( '../config/jwt' );
 const favoriteData  = require( './mocks/favorite' );
 
 let route         = '/users/';
-const jwtToken = jwt.sign({ id: 1 }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+const jwtToken = jwt.sign({ id: 1, role: 'user' }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
 
 const { name, email, password } = require( './mocks/user' );
 const models = require( '../models' );
@@ -131,15 +131,66 @@ describe( "#User Favorite",  () => {
             .end( function ( err, res ) {
                 if ( err ) return done( err );
                 
-                    supertest
-                        .get( rt )
-                        .set( 'Authorization', `Bearer ${jwtToken}` )
-                        .end( function ( err, res ) {
-                            if ( err ) return done( err );
-                            expect( res.status ).to.be.equal( 200 );
-                            expect( res.body ).to.be.equal( null );
-                            done();
-                        } );
+                models.Favorite.findOne({ where: { id: favorite.id } })
+                .then( fvt => {
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( fvt ).to.be.equal( null );
+                    done();
+                })
+                .catch( err => done( err ) );
             } );
+    });
+
+    it( "#Should not remove a favorite from other user", done => {
+        let oUser;
+
+        models.User.create({ name: "Other User", email: "oemail@oemail.com", password: "123456789" })
+        .then( otherUser => {
+            oUser = otherUser;
+            return models.Favorite.create({
+                label: "Other Favorite",
+                UserId: otherUser.id,
+                value: 57.97,
+                type: 1
+            });
+        })
+        .then( otherUserFavorite => {
+            const rt = `/users/${oUser.id}/favorites/${otherUserFavorite.id}`;
+            supertest
+                .delete( rt )
+                .set( 'Authorization', `Bearer ${jwtToken}` )
+                .expect( 403 )
+                .end( done );
+        })
+        .catch( err => done( err ) );
+    });
+
+    it( "#Should not remove a favorite from other user even if explicity pass other user_id", done => {
+        let oUser;
+
+        models.User.create({ name: "Other User", email: "oemail@oemail.com.ts", password: "123456789" })
+        .then( otherUser => {
+            oUser = otherUser;
+            return models.Favorite.create({
+                label: "Other Favorite",
+                UserId: otherUser.id,
+                value: 57.97,
+                type: 0
+            });
+        })
+        .then( oFavorite => {
+            const rt = `/users/${user.id}/favorites/${oFavorite.id}`;
+
+            supertest
+                .delete( rt )
+                .set( 'Authorization', `Bearer ${jwtToken}` )
+                .end( ( err, res )  => {
+                    if ( err ) return done( err );
+
+                    expect( res.status ).to.be.equal( 403 );
+                    done();
+                })
+        })
+        .catch( err => done( err ) );
     });
 });
