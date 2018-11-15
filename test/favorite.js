@@ -1,196 +1,307 @@
 const express       = require( '../app' );
 const supertest     = require( 'supertest' )( express );
-const expect        = require( 'chai' ).expect;
+const chai          = require( 'chai' );
+const expect        = chai.expect;
+const assertArrays  = require('chai-arrays');
+chai.use(assertArrays);
 
 const jwt           = require( 'jsonwebtoken' );
 const jwtConfig     = require( '../config/jwt' );
-const favoriteData  = require( './mocks/favorite' );
 
-let route         = '/users/';
-const jwtToken = jwt.sign({ id: 1, role: 'user' }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
-
-const { name, email, password } = require( './mocks/user' );
 const models = require( '../models' );
-let user;
-let favorite;
+
+const test = {
+    createUser: async ( email, name = 'my name', password = '123456' ) => {
+        return await models.User.create({ name, email, password });
+    },
+    createFavorite: async ( UserId ) => {
+        return await models.Favorite.create({ UserId, label: "My Favorite", value: 21.77, type: 1 });
+    },
+    createTokenForUser: ( id, role = 'user' ) => {
+        return jwt.sign({ id, role }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+    }
+};
 
 describe( "#User Favorite",  () => {        
-    before( async function () {
-        await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-        models.sequelize.options.maxConcurrentQueries = 1;
-        await models.User.sync({ force: true });
-        await models.Favorite.sync({ force: true });
-        await models.sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-        user = await models.User.create( { name, email, password } );
-        favorite = await models.Favorite.create({ ...favoriteData, UserId: user.id });
-        route = `${route}${user.id}/favorites`; 
-    });
-    
-    it( "#Should not return favorites for non authenticated users", done => {
-        supertest
-            .get( route )
-            .expect( 401 )
-            .end( done );
+    beforeEach( async function () {
+        await models.Favorite.destroy({ where: {} });
+        await models.User.destroy({ where: {} });
     });
 
-    it( "#Should not create a favorite without valid data", done => {
-        supertest
-            .post( route )
-            .set( 'Authorization', `Bearer ${jwtToken}` )
-            .end( function ( err, res ) {
-                if ( err ) return done( err );
-
-                expect( res.status ).to.be.equal( 422 );
-                expect( res.body ).to.have.own.property( 'errors' );
-                expect( res.body.errors ).to.be.an( 'array' );
-                expect( res.body.errors[0] ).to.have.own.property( 'param' );
-                expect( res.body.errors[0].param ).to.be.equal( 'label' );
-                expect( res.body.errors[1] ).to.have.own.property( 'param' );
-                expect( res.body.errors[1].param ).to.be.equal( 'type' );
-                expect( res.body.errors[2] ).to.have.own.property( 'param' );
-                expect( res.body.errors[2].param ).to.be.equal( 'value' );
-                expect( res.body.errors[3] ).to.have.own.property( 'param' );
-                expect( res.body.errors[3].param ).to.be.equal( 'UserId' );
-                done();
-            });
-    });
-
-    it( "#Should return a list of favorites", done => {
-        supertest
-            .get( route )
-            .set( 'Authorization', `Bearer ${jwtToken}` )
-            .expect( 200 )
-            .end( function ( err, res ) {
-                if ( err ) return done( err );
-                                
-                expect( res.status ).to.be.equal( 200 );
-                expect( res.body.length ).to.be.equal( 1 );
-                done();
-            } );
-    });
-
-    it( "#Should successfull create favorite ", done => {
-        supertest
-            .post( route )
-            .set( 'Authorization', `Bearer ${jwtToken}` )
-            .send({ ...favoriteData, UserId: user.id })
-            .expect(201)
-            .end( done );
-    });
-
-    it( "#Should return details of a favorite", done => {
-        supertest
-            .get( `${route}/${favorite.id}` )
-            .set( 'Authorization', `Bearer ${jwtToken}` )
-            .end( function ( err, res ) {
-                if ( err ) return done( err );
-
-                expect(res.status).to.be.equal(200);
-
-                expect( res.body ).to.has.own.property( 'id' );
-                expect( res.body ).to.has.own.property( 'label' );
-                expect( res.body ).to.has.own.property( 'type' );
-                expect( res.body ).to.has.own.property( 'value' );
-
-                expect( res.body.id ).to.be.equal(favorite.id);
-                expect( res.body.label ).to.be.equal(favoriteData.label);
-                expect( res.body.type ).to.be.equal(favoriteData.type);
-                expect( res.body.value ).to.be.equal( favoriteData.value.toString() );
-                expect( res.body.UserId ).to.be.equal( favorite.UserId);
-                done();
-            });
-    });
-
-    it( "#Should update Favorite", done => {
-        const paramsToUpdate = { label: "Updated Label", value: 17.99 };
-                
-        supertest
-            .put( `${route}/${favorite.id}` )
-            .set( 'Authorization', `Bearer ${jwtToken}` )
-            .send( paramsToUpdate )
-            .end( ( err, res ) => {
-                if ( err ) return done( err );
-
-                models.Favorite.findOne({ where: { id: favorite.id } })
-                .then( updatedFavorite => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( updatedFavorite.label ).to.be.equal( paramsToUpdate.label );
-                    expect( updatedFavorite.value ).to.be.equal( paramsToUpdate.value.toString() );
-                    done();
-                })
-                .catch( err => done( err ) );
-            });
-    });
-
-    it( "#Should remove a favorite from database", done => {                
-        const rt = `${route}/${favorite.id}`;
-        
-        supertest
-            .delete( rt )
-            .set( 'Authorization', `Bearer ${jwtToken}` )
-            .end( function ( err, res ) {
-                if ( err ) return done( err );
-                
-                models.Favorite.findOne({ where: { id: favorite.id } })
-                .then( fvt => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( fvt ).to.be.equal( null );
-                    done();
-                })
-                .catch( err => done( err ) );
-            } );
-    });
-
-    it( "#Should not remove a favorite from other user", done => {
-        let oUser;
-
-        models.User.create({ name: "Other User", email: "oemail@oemail.com", password: "123456789" })
-        .then( otherUser => {
-            oUser = otherUser;
-            return models.Favorite.create({
-                label: "Other Favorite",
-                UserId: otherUser.id,
-                value: 57.97,
-                type: 1
-            });
-        })
-        .then( otherUserFavorite => {
-            const rt = `/users/${oUser.id}/favorites/${otherUserFavorite.id}`;
+    describe( '#LIST', () => {
+        it( "#Should NOT list favorites for non authenticated users", done => {
             supertest
-                .delete( rt )
-                .set( 'Authorization', `Bearer ${jwtToken}` )
-                .expect( 403 )
+                .get( '/users/10000/favorites' )
+                .expect( 401 )
                 .end( done );
-        })
-        .catch( err => done( err ) );
+        });
+
+        it( "#Should NOT list favorites from other user", async () => {
+            const user1      = await test.createUser( 'foo1@bar' );
+            const user2      = await test.createUser( 'foo2@bar' );
+
+            const routeForUser2      = `/users/${user2.id}/favorites`;
+            const tokenForUser1      = test.createTokenForUser( user1.id );  
+    
+            await test.createFavorite( user1.id );
+            await test.createFavorite( user2.id );
+    
+            await supertest
+                .get( routeForUser2 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( 403 );
+        });
+
+
+        it( "#Should list favorites of a user", async () => {
+            const user1      = await test.createUser( 'foo1@bar' );
+            const user2      = await test.createUser( 'foo2@bar' );
+
+            const routeForUser1      = `/users/${user1.id}/favorites`;
+            const tokenForUser1      = test.createTokenForUser( user1.id );  
+    
+            await test.createFavorite( user1.id );
+            await test.createFavorite( user2.id );
+    
+            await supertest
+                .get( routeForUser1 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( res => {
+                    expect( res.status ).to.be.equals( 200 );
+                    expect( res.body ).to.have.lengthOf( 1 );
+                    expect( res.body[0] ).to.have.own.property( 'UserId' );
+                    expect( res.body[0].UserId ).to.not.be.equal( user2.id );
+                });
+        });
     });
 
-    it( "#Should not remove a favorite from other user even if explicity pass other user_id", done => {
-        let oUser;
+    describe( '#SHOW', () => {
+        it( "#Should NOT return details for non authenticated users", async () => {
+            const route = `/users/1/favorites`;
+            
+            await supertest
+                .post( route )
+                .expect( 401 );
+        });
 
-        models.User.create({ name: "Other User", email: "oemail@oemail.com.ts", password: "123456789" })
-        .then( otherUser => {
-            oUser = otherUser;
-            return models.Favorite.create({
-                label: "Other Favorite",
-                UserId: otherUser.id,
-                value: 57.97,
-                type: 0
-            });
-        })
-        .then( oFavorite => {
-            const rt = `/users/${user.id}/favorites/${oFavorite.id}`;
+        it( '#Should NOT return details from others users', async () => {
+            const user1     = await test.createUser( 'foo1@bar' );
+            const user2     = await test.createUser( 'foo2@bar' );
+
+            const favorite2 = await test.createFavorite( user2.id );
+            const route     = `/users/${user1.id}/favorites/${favorite2.id}`;
+            const token     = test.createTokenForUser( user1.id ); 
+
+            await supertest
+                .get( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .expect( 403 );
+        });
+
+        it( '#Should NOT return details from others users EVEN if :user_id and :favorite_id are correct', async () => {
+            const user1     = await test.createUser( 'foo1@bar' );
+            const user2     = await test.createUser( 'foo2@bar' );
+
+            const favorite2 = await test.createFavorite( user2.id );
+            const routeForUser2     = `/users/${user2.id}/favorites/${favorite2.id}`;
+            const tokenForUser1     = test.createTokenForUser( user1.id );
+
+            await supertest
+                .get( routeForUser2 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( 403 );
+        });
+
+        it( "#Should return details of a favorite for his owner", async () => {
+            const user1     = await test.createUser( 'foo1@bar' );
+            const user2     = await test.createUser( 'foo2@bar' );
+
+            const favorite1 = await test.createFavorite( user1.id );
+            const favorite2 = await test.createFavorite( user2.id );
+            
+            const routeForUser1     = `/users/${user1.id}/favorites/${favorite1.id}`;
+            const tokenForUser1     = test.createTokenForUser( user1.id );
+
+            await supertest
+                .get( routeForUser1 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( res => {
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( res.body ).to.not.be.array();
+                    expect( res.body ).to.have.own.property( 'UserId' );
+                    expect( res.body.UserId ).to.be.equal( user1.id );
+                });
+        });
+    });
+
+    describe( "#CREATE", () => {
+        it( "#Should NOT create a favorite for non authenticated users", async () => {
+            const route = `/users/1/favorites`;
+            
+            await supertest
+                .post( route )
+                .expect( 401 );
+        });
+
+        it( "#Should NOT create a favorite without valid data", async () => {
+            const user  = await test.createUser( 'foo1@bar' );
+            const route = `/users/${user.id}/favorites`;
+            const token = test.createTokenForUser( user.id );
+            
+            await supertest
+                .post( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .expect( res => {
+                    expect( res.status ).to.be.equal( 422 );
+                    expect( res.body ).to.have.own.property( 'errors' );
+                    expect( res.body.errors ).to.be.an.array();
+                    expect( res.body.errors[0] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[0].param ).to.be.equal( 'label' );
+                    expect( res.body.errors[1] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[1].param ).to.be.equal( 'type' );
+                    expect( res.body.errors[2] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[2].param ).to.be.equal( 'value' );
+                });
+        });
+
+        it ( "#Should NOT create favorite for others users", async () => {
+            const user1  = await test.createUser( 'foo1@bar' );
+            const user2  = await test.createUser( 'foo2@bar' );
+
+            const routeForUser2 = `/users/${user2.id}/favorites`;
+            const tokenForUser1 = test.createTokenForUser( user1.id );
+
+            await supertest
+                .post( routeForUser2 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .send({ label: 'Favorite', value: 12.99, type: 1 })
+                .expect( 403 );
+        });
+
+        it( "#Should create favorite", async () => {
+            const user  = await test.createUser( 'foo1@bar' );
+            const route = `/users/${user.id}/favorites`;
+            const token = test.createTokenForUser( user.id );
+
+            await supertest
+                .post( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .send({ label: 'Favorite', value: 12.99, type: 1, UserId: user.id })
+                .expect( res => {
+                    expect( res.status ).to.be.equal( 201 );
+                    expect( res.body ).to.have.own.property( 'data' );
+                    expect( res.body.data ).to.have.own.property( 'UserId' );
+                    expect( res.body.data.UserId ).to.be.equal( user.id );
+                });
+        });
+    });
+   
+    describe( "#UPDATE", () => {
+        it( "#Should NOT update a favorite if users is unauthenticated", done => {
+            const route = `/users/1/favorites/1`;
 
             supertest
-                .delete( rt )
-                .set( 'Authorization', `Bearer ${jwtToken}` )
-                .end( ( err, res )  => {
-                    if ( err ) return done( err );
+                .put( route )
+                .expect( 401 )
+                .end( done );
+        });
 
-                    expect( res.status ).to.be.equal( 403 );
-                    done();
-                })
-        })
-        .catch( err => done( err ) );
+        it( "Should not update favorite from other users", async () => {
+            const user1     = await test.createUser( 'foo1@bar' );
+            const user2     = await test.createUser( 'foo2@bar' );
+
+            const favorite2 = await test.createFavorite( user2.id );
+            const routeForFavorite2     = `/users/${user1.id}/favorites/${favorite2.id}`;
+            const tokenForUser1     = test.createTokenForUser( user1.id );
+
+            await supertest
+                .put( routeForFavorite2 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .send( { label: 'Updated Label', type: 0, value: 7.77 } )
+                .expect( 403 );
+        });
+
+        it( "Should not update favorite from other users EVEN if other user_id is correct", async () => {
+            const user1     = await test.createUser( 'foo1@bar' );
+            const user2     = await test.createUser( 'foo2@bar' );
+
+            const favorite2 = await test.createFavorite( user2.id );
+            const routeForUser2Favorite2     = `/users/${user2.id}/favorites/${favorite2.id}`;
+            const tokenForUser1     = test.createTokenForUser( user1.id );
+
+            await supertest
+                .put( routeForUser2Favorite2 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .send( { label: 'Updated Label', type: 0, value: 7.77 } )
+                .expect( 403 );
+        });
+
+        it( "Should update favorite", async () => {
+            const user     = await test.createUser( 'foo1@bar' );
+            const favorite = await test.createFavorite( user.id );
+            
+            const route     = `/users/${user.id}/favorites/${favorite.id}`;
+            const token     = test.createTokenForUser( user.id );
+
+            await supertest
+                .put( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .send( { label: 'Updated Label', type: 0, value: 7.77 } )
+                .expect( 200 );
+        });
+    });
+
+    describe( '#DELETE', () => {
+        it( '#Should NOT be possible to non authenticated users remove favorites', done => {
+            supertest
+                .delete( '/users/1/favorites/1' )
+                .expect( 401 )
+                .end( done );
+        });
+
+        it( '#Should no be possible to a user delete favorite of other users', async () => {
+            const user1 = await test.createUser( 'foo1@bar' );
+            const user2 = await test.createUser( 'foo2@bar' );
+            
+            const favoriteOfUser2 = await test.createFavorite( user2.id );
+            const route = `/users/${user1.id}/favorites/${favoriteOfUser2.id}`;
+            const tokenForUser1 = test.createTokenForUser( user1.id );
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( 403 ); 
+        });
+
+        it( '#Should no be possible to a user delete favorite of other users EVEN if he pass a correct other :user_id and :favorite_id', async () => {
+            const user1 = await test.createUser( 'foo1@bar' );
+            const user2 = await test.createUser( 'foo2@bar' );
+            
+            const favoriteOfUser2 = await test.createFavorite( user2.id );
+            const routeForUser2 = `/users/${user2.id}/favorites/${favoriteOfUser2.id}`;
+            const tokenForUser1 = test.createTokenForUser( user1.id );
+
+            await supertest
+                .delete( routeForUser2 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( 403 ); 
+        });
+
+        it( '#Should remove a user favorite', async () => {
+            const user      = await test.createUser( 'foo1@bar' ); 
+            const favorite  = await test.createFavorite( user.id );
+            
+            const route = `/users/${user.id}/favorites/${favorite.id}`;
+            const token = test.createTokenForUser( user.id );
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .expect( async res => {
+                    deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( deletedFavorite ).to.be.equal( null );
+                });
+        });
     });
 });

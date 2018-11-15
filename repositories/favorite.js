@@ -1,5 +1,4 @@
 const Favorite  = require( '../models' ).Favorite;
-const Category  = require( '../models' ).Category;
 
 exports.allByUserId = async ( user_id ) => {
     const favorites = await Favorite.findAll( { where: { userId: user_id } } );

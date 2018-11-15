@@ -2,7 +2,7 @@ const express = require('express');
 const router  = express.Router();
 
 const Auth = require( '../middlewares/auth' );
-const Permission = require( '../middlewares/permission' );
+const Gate = require( '../middlewares/gate' );
 
 const CategoryController = require( '../controllers/categories' );
 const CategoryValidator  = require( '../validators/category' );
@@ -21,11 +21,11 @@ router.post( '/:user_id/categories', [ Auth ].concat( CategoryValidator.create )
 router.get( '/:user_id/categories', [ Auth ] , CategoryController.index );
 
 // FAVORITE ROUTES
-router.delete( '/:user_id/favorites/:favorite_id', [ Auth, Permission ], FavoriteController.destroy );
-router.put( '/:user_id/favorites/:favorite_id', [ Auth ], FavoriteController.update );
-router.get( '/:user_id/favorites/:favorite_id', [ Auth ], FavoriteController.show );
+router.delete( '/:user_id/favorites/:favorite_id', [ Auth, Gate ], FavoriteController.destroy );
+router.put( '/:user_id/favorites/:favorite_id', [ Auth, Gate ], FavoriteController.update );
+router.get( '/:user_id/favorites/:favorite_id', [ Auth, Gate ], FavoriteController.show );
 router.post( '/:user_id/favorites', [ Auth ].concat( FavoriteValidator.create ), FavoriteController.create );
-router.get( '/:user_id/favorites', [ Auth ] , FavoriteController.index );
+router.get( '/:user_id/favorites', [ Auth, Gate ] , FavoriteController.index );
 
 // ENTRIES ROUTES
 router.delete( '/:user_id/entries/:entry_id', [ Auth ], EntryController.destroy );

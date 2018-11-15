@@ -11,10 +11,5 @@ exports.create = [
 
     check( 'value' )
         .isFloat()
-        .withMessage( 'Preço inválido.' ),
-    
-    check( 'UserId' )
-        .isInt({gt: 0})
-        .withMessage( 'Usuário inválido.' )
-
+        .withMessage( 'Preço inválido.' )
 ];
