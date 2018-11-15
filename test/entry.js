@@ -33,7 +33,7 @@ describe( "#User Entries",  () => {
             const user2      = await factory.createUser();
 
             const routeForUser2      = `/users/${user2.id}/entries`;
-            const tokenForUser1      = factory.createTokenForUser( user1.id );  
+            const tokenForUser1      = factory.createTokenForUser( user1 );  
     
             await factory.createEntry( user1.id );
             await factory.createEntry( user2.id );
@@ -49,7 +49,7 @@ describe( "#User Entries",  () => {
             const user2      = await factory.createUser();
 
             const routeForUser1      = `/users/${user1.id}/entries`;
-            const tokenForUser1      = factory.createTokenForUser( user1.id );  
+            const tokenForUser1      = factory.createTokenForUser( user1 );  
     
             await factory.createEntry( user1.id );
             await factory.createEntry( user2.id );
@@ -72,7 +72,7 @@ describe( "#User Entries",  () => {
             const admin      = await factory.createUser( null, 'admin' );
 
             const routeForUser1      = `/users/${user1.id}/entries`;
-            const tokenForAdmin      = factory.createTokenForUser( admin.id, 'admin' );  
+            const tokenForAdmin      = factory.createTokenForUser( admin );  
     
             await factory.createEntry( user1.id );
             await factory.createEntry( user2.id );
@@ -106,7 +106,7 @@ describe( "#User Entries",  () => {
             const entryForUser1  = await factory.createEntry( user1.id );
             const entryForUser2  = await factory.createEntry( user2.id );
 
-            const tokenForUser1     = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1     = factory.createTokenForUser( user1 ); 
             const routeForEntry1    = `/users/${user1.id}/entries/${entryForUser2.id}`;
 
             await supertest
@@ -122,7 +122,7 @@ describe( "#User Entries",  () => {
             const entryForUser1  = await factory.createEntry( user1.id );
             const entryForUser2  = await factory.createEntry( user2.id );
 
-            const tokenForUser1     = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1     = factory.createTokenForUser( user1 ); 
             const routeForEntry2    = `/users/${user2.id}/entries/${entryForUser2.id}`;
 
             await supertest
@@ -138,7 +138,7 @@ describe( "#User Entries",  () => {
             const entryForUser1  = await factory.createEntry( user1.id );
             const entryForUser2  = await factory.createEntry( user2.id );
 
-            const tokenForUser1     = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1     = factory.createTokenForUser( user1 ); 
             const routeForEntry1    = `/users/${user1.id}/entries/${entryForUser1.id}`;
 
             await supertest
@@ -157,7 +157,7 @@ describe( "#User Entries",  () => {
             
             const entry     = await factory.createEntry( user.id );
 
-            const tokenForAdmin    = factory.createTokenForUser( admin.id, 'admin' ); 
+            const tokenForAdmin    = factory.createTokenForUser( admin ); 
             const routeForEntry    = `/users/${user.id}/entries/${entry.id}`;
 
             await supertest
@@ -184,7 +184,7 @@ describe( "#User Entries",  () => {
             const user2     = await factory.createUser();
 
             const routeForUser2 = `/users/${user2.id}/entries`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1 = factory.createTokenForUser( user1 ); 
 
             await supertest
                 .post( routeForUser2 )
@@ -197,7 +197,7 @@ describe( "#User Entries",  () => {
             const user1 = await factory.createUser();
   
             const routeForUser1 = `/users/${user1.id}/entries`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1 = factory.createTokenForUser( user1 ); 
 
             await supertest
                 .post( routeForUser1 )
@@ -227,7 +227,7 @@ describe( "#User Entries",  () => {
             const user1 = await factory.createUser();
 
             const routeForUser1 = `/users/${user1.id}/entries`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1 = factory.createTokenForUser( user1 ); 
             const now = new Date();
 
             await supertest
@@ -253,7 +253,7 @@ describe( "#User Entries",  () => {
             const categoryForUser1 = await factory.createCategory( user1.id );
 
             const routeForUser1 = `/users/${user1.id}/entries`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1 = factory.createTokenForUser( user1 ); 
             const now = new Date();
 
             await supertest
@@ -287,7 +287,7 @@ describe( "#User Entries",  () => {
             await factory.createCategory( user2.id );
 
             const routeForUser1 = `/users/${user1.id}/entries`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1 = factory.createTokenForUser( user1 ); 
             const now = new Date();
 
             await supertest
@@ -310,7 +310,7 @@ describe( "#User Entries",  () => {
             const admin = await factory.createUser( null, 'admin' );
 
             const routeForUser1 = `/users/${user1.id}/entries`;
-            const tokenForAdmin = factory.createTokenForUser( admin.id, 'admin' ); 
+            const tokenForAdmin = factory.createTokenForUser( admin ); 
             const now = new Date();
 
             await supertest
@@ -342,7 +342,7 @@ describe( "#User Entries",  () => {
             const user2 = await factory.createUser();
 
             const entryForUser2 = await factory.createEntry( user2.id );
-            const tokenForUser1 = factory.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1 );
 
             const route = `/users/${user1.id}/entries/${entryForUser2.id}`;
 
@@ -359,7 +359,7 @@ describe( "#User Entries",  () => {
 
             const entryForUser2    = await factory.createEntry( user2.id );
             const routeForUser2    = `/users/${user2.id}/entries/${entryForUser2.id}`;
-            const tokenForUser1    = factory.createTokenForUser( user1.id );
+            const tokenForUser1    = factory.createTokenForUser( user1 );
 
             await supertest
                 .put( routeForUser2 )
@@ -373,7 +373,7 @@ describe( "#User Entries",  () => {
             const entry = await factory.createEntry( user1.id );
   
             const routeForUser1 = `/users/${user1.id}/entries/${entry.id}`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id ); 
+            const tokenForUser1 = factory.createTokenForUser( user1 ); 
 
             await supertest
                 .put( routeForUser1 )
@@ -404,7 +404,7 @@ describe( "#User Entries",  () => {
 
             const entryForUser1    = await factory.createEntry( user1.id );
             const routeForUser1    = `/users/${user1.id}/entries/${entryForUser1.id}`;
-            const tokenForUser1    = factory.createTokenForUser( user1.id );
+            const tokenForUser1    = factory.createTokenForUser( user1 );
 
             await supertest
                 .put( routeForUser1 )
@@ -419,7 +419,7 @@ describe( "#User Entries",  () => {
 
             const entryForUser1    = await factory.createEntry( user1.id );
             const routeForUser1    = `/users/${user1.id}/entries/${entryForUser1.id}`;
-            const tokenForAdmin    = factory.createTokenForUser( admin.id, 'admin' );
+            const tokenForAdmin    = factory.createTokenForUser( admin );
 
             await supertest
                 .put( routeForUser1 )
@@ -457,7 +457,7 @@ describe( "#User Entries",  () => {
             
             const entry = await factory.createEntry( user1.id );
             const route = `/users/${user1.id}/entries/${entry.id}`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1 );
 
             await supertest
                 .delete( route )
@@ -471,12 +471,12 @@ describe( "#User Entries",  () => {
 
         it( '#Admins can delete users entries', async () => {
             const user1 = await factory.createUser();
-            const admin = await factory.createUser();
+            const admin = await factory.createUser( null, 'admin' );
             
             const entry = await factory.createEntry( user1.id );
             const route = `/users/${user1.id}/entries/${entry.id}`;
             
-            const tokenForAdmin = factory.createTokenForUser( admin.id, 'admin' );
+            const tokenForAdmin = factory.createTokenForUser( admin );
 
             await supertest
                 .delete( route )

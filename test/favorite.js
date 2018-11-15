@@ -27,7 +27,7 @@ describe( '#USER FAVORITES',  () => {
             const user2      = await factory.createUser();
 
             const routeForUser2      = `/users/${user2.id}/favorites`;
-            const tokenForUser1      = factory.createTokenForUser( user1.id );  
+            const tokenForUser1      = factory.createTokenForUser( user1 );  
     
             await factory.createFavorite( user1.id );
             await factory.createFavorite( user2.id );
@@ -42,7 +42,7 @@ describe( '#USER FAVORITES',  () => {
             const user1      = await factory.createUser();
 
             const routeForUser1      = `/users/${user1.id}/favorites`;
-            const tokenForUser1      = factory.createTokenForUser( user1.id );  
+            const tokenForUser1      = factory.createTokenForUser( user1 );  
     
             await factory.createFavorite( user1.id );
     
@@ -62,7 +62,7 @@ describe( '#USER FAVORITES',  () => {
             const admin      = await factory.createUser( null, 'admin' );
 
             const routeForUser1      = `/users/${user1.id}/favorites`;
-            const tokenForAdmin      = factory.createTokenForUser( admin.id, 'admin' );  
+            const tokenForAdmin      = factory.createTokenForUser( admin );  
     
             await factory.createFavorite( user1.id );
             await factory.createFavorite( user1.id );
@@ -98,7 +98,7 @@ describe( '#USER FAVORITES',  () => {
 
             const favorite2 = await factory.createFavorite( user2.id );
             const route     = `/users/${user1.id}/favorites/${favorite2.id}`;
-            const token     = factory.createTokenForUser( user1.id ); 
+            const token     = factory.createTokenForUser( user1 ); 
 
             await supertest
                 .get( route )
@@ -112,7 +112,7 @@ describe( '#USER FAVORITES',  () => {
 
             const favorite2 = await factory.createFavorite( user2.id );
             const routeForUser2     = `/users/${user2.id}/favorites/${favorite2.id}`;
-            const tokenForUser1     = factory.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1 );
 
             await supertest
                 .get( routeForUser2 )
@@ -125,7 +125,7 @@ describe( '#USER FAVORITES',  () => {
             const favorite1 = await factory.createFavorite( user1.id );
            
             const routeForUser1     = `/users/${user1.id}/favorites/${favorite1.id}`;
-            const tokenForUser1     = factory.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1 );
 
             await supertest
                 .get( routeForUser1 )
@@ -144,7 +144,7 @@ describe( '#USER FAVORITES',  () => {
             const favorite1 = await factory.createFavorite( user1.id );
            
             const routeForUser1     = `/users/${user1.id}/favorites/${favorite1.id}`;
-            const tokenForAdmin     = factory.createTokenForUser( admin.id, 'admin' );
+            const tokenForAdmin     = factory.createTokenForUser( admin );
 
             await supertest
                 .get( routeForUser1 )
@@ -170,7 +170,7 @@ describe( '#USER FAVORITES',  () => {
         it( '#A given user cannot create a favorite with invalid data', async () => {
             const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
-            const token = factory.createTokenForUser( user.id );
+            const token = factory.createTokenForUser( user );
             
             await supertest
                 .post( route )
@@ -193,7 +193,7 @@ describe( '#USER FAVORITES',  () => {
             const user2  = await factory.createUser();
 
             const routeForUser2 = `/users/${user2.id}/favorites`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1 );
 
             await supertest
                 .post( routeForUser2 )
@@ -205,7 +205,7 @@ describe( '#USER FAVORITES',  () => {
         it( '#A given user can create your own favorites', async () => {
             const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
-            const token = factory.createTokenForUser( user.id );
+            const token = factory.createTokenForUser( user );
 
             await supertest
                 .post( route )
@@ -224,7 +224,7 @@ describe( '#USER FAVORITES',  () => {
             const admin  = await factory.createUser( null, 'admin' );
 
             const route = `/users/${user.id}/favorites`;
-            const token = factory.createTokenForUser( admin.id, 'admin' );
+            const token = factory.createTokenForUser( admin );
 
             await supertest
                 .post( route )
@@ -255,7 +255,7 @@ describe( '#USER FAVORITES',  () => {
 
             const favorite2 = await factory.createFavorite( user2.id );
             const routeForFavorite2     = `/users/${user1.id}/favorites/${favorite2.id}`;
-            const tokenForUser1     = factory.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1 );
 
             await supertest
                 .put( routeForFavorite2 )
@@ -270,7 +270,7 @@ describe( '#USER FAVORITES',  () => {
 
             const favorite2 = await factory.createFavorite( user2.id );
             const routeForUser2Favorite2     = `/users/${user2.id}/favorites/${favorite2.id}`;
-            const tokenForUser1     = factory.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1 );
 
             await supertest
                 .put( routeForUser2Favorite2 )
@@ -284,7 +284,7 @@ describe( '#USER FAVORITES',  () => {
             const favorite = await factory.createFavorite( user.id );
             
             const route     = `/users/${user.id}/favorites/${favorite.id}`;
-            const token     = factory.createTokenForUser( user.id );
+            const token     = factory.createTokenForUser( user );
 
             await supertest
                 .put( route )
@@ -307,7 +307,7 @@ describe( '#USER FAVORITES',  () => {
             const favorite = await factory.createFavorite( user.id );
             
             const route     = `/users/${user.id}/favorites/${favorite.id}`;
-            const token     = factory.createTokenForUser( admin.id, 'admin' );
+            const token     = factory.createTokenForUser( admin );
 
             await supertest
                 .put( route )
@@ -338,7 +338,7 @@ describe( '#USER FAVORITES',  () => {
             
             const favoriteOfUser2 = await factory.createFavorite( user2.id );
             const route = `/users/${user1.id}/favorites/${favoriteOfUser2.id}`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1 );
 
             await supertest
                 .delete( route )
@@ -352,7 +352,7 @@ describe( '#USER FAVORITES',  () => {
             
             const favoriteOfUser2 = await factory.createFavorite( user2.id );
             const routeForUser2 = `/users/${user2.id}/favorites/${favoriteOfUser2.id}`;
-            const tokenForUser1 = factory.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1 );
 
             await supertest
                 .delete( routeForUser2 )
@@ -365,7 +365,7 @@ describe( '#USER FAVORITES',  () => {
             const favorite  = await factory.createFavorite( user.id );
             
             const route = `/users/${user.id}/favorites/${favorite.id}`;
-            const token = factory.createTokenForUser( user.id );
+            const token = factory.createTokenForUser( user );
 
             await supertest
                 .delete( route )
@@ -383,7 +383,7 @@ describe( '#USER FAVORITES',  () => {
             const favorite  = await factory.createFavorite( user.id );
             
             const route = `/users/${user.id}/favorites/${favorite.id}`;
-            const token = factory.createTokenForUser( admin.id, 'admin' );
+            const token = factory.createTokenForUser( admin );
     
             await supertest
                 .delete( route )

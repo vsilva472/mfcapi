@@ -3,9 +3,11 @@ const models = require( '../../models' );
 const jwt           = require( 'jsonwebtoken' );
 const jwtConfig     = require( '../../config/jwt' );
 
+const randomDigits  = require( '../../modules/random-numbers' ); 
+
 const factory = {
-    createTokenForUser: ( id, role = 'user' ) => {
-        return jwt.sign({ id, role }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+    createTokenForUser: ( user ) => {
+        return jwt.sign({ id: user.id, role: user.role }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
     },
     createUser: async ( email = null, role = 'user', name = 'my name', password = '123456' ) => {
         if ( ! email ) email = `u_${new Date().getTime()}@gmail.com`;
@@ -19,7 +21,10 @@ const factory = {
     },
     createCategory: async ( UserId, label = 'My Category', color = '#ff6600' ) => {
         return await models.Category.create({ UserId, label, color });
-    }
+    },
+    createRandomDigits: ( max, zero_lead = false ) => {
+        return randomDigits.generate( max, zero_lead );
+    } 
 };
 
 module.exports = factory;
