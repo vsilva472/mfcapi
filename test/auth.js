@@ -20,6 +20,11 @@ const routes = {
 };
 
 describe( '#AUTH', () => {
+    before( async function () {
+        await models.Favorite.destroy({ where: {} });
+        await models.User.destroy({ where: {} });
+    });
+
     describe( "#PASSWORD RESET",  () => {
         it( '#A given signed user cannot recover password', done => {
             supertest
@@ -174,12 +179,63 @@ describe( '#AUTH', () => {
                 .expect( 403 )
                 .end( done );
         });
-
+        
         it( '#A given user cannot signup with invalid data', done => {
             supertest
                 .post( routes.signup )
-                .set( 'Authorization', 'Bearer fake_token_here' )
-                .end( (err, res) => {});
+                .end( (err, res) => {
+                    if ( err ) return done( err );
+                                        
+                    expect( res.status ).to.be.equal( 422 );
+                    expect( res.type ).to.be.equal( 'application/json' );
+
+                    expect( res.body.errors ).to.be.an.array();
+                    expect( res.body.errors ).to.have.lengthOf( 4 );
+
+                    expect( res.body.errors[0] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[0].param ).to.be.equal( 'email' );
+                    
+                    expect( res.body.errors[1] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[1].param ).to.be.equal( 'name' );
+
+                    expect( res.body.errors[2] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[2].param ).to.be.equal( 'password' );
+
+                    expect( res.body.errors[3] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[3].param ).to.be.equal( 'password_conf' );
+                    
+                    done();
+                });
+        });
+
+        it( '#A given registered user cannot signup with same email', async () => {
+            const user = await factory.createUser();
+            const newUserData = {email: user.email, name: 'My name', password: '123456', password_conf: '123456'};
+            
+            await supertest
+                .post( routes.signup )
+                .send( newUserData )
+                .expect( res => {
+                    expect( res.status ).to.be.equal( 422 );
+                    expect( res.body ).to.have.own.property( 'errors' );
+                    expect( res.body.errors ).to.be.an.array();
+                    expect( res.body.errors ).to.have.lengthOf( 1 );
+                    expect( res.body.errors[0] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[0].param ).to.be.equal( 'email' );
+                }); 
+        });
+
+        it( '#A given unregistered user can signup', async () => {
+            const userData = { name: 'Hinata Uzumaki', email: 'hinata_sama@konoha.jp', password: '123456', password_conf: '123456' };
+            
+            await supertest
+                .post( routes.signup )
+                .send( userData )
+                .expect( async res => {
+                    const user = await models.User.findOne({ where: { email: userData.email } });
+                    expect( res.status ).to.be.equal( 201 );
+                    expect( user.email ).to.be.equal( userData.email );
+                }); 
         });
     });
 });
