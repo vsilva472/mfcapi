@@ -429,4 +429,63 @@ describe( "#User Entries",  () => {
         });
         
     });
+
+    describe( '#DELETE', () => {
+        it( '#Anonymous user cannot delete an entry', done => {
+            supertest
+                .delete( '/users/1/entries/1' )
+                .expect( 401 )
+                .end( done );
+        });
+
+        it( '#A given user cannot delete an entry of others users', async () => {
+            const user1 = await factory.createUser();
+            const user2 = await factory.createUser();
+            
+            const entryOfUser2 = await factory.createEntry( user2.id );
+            const route = `/users/${user1.id}/entries/${entryOfUser2.id}`;
+            const tokenForUser1 = factory.createTokenForUser( user1.id );
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( 403 );
+        });
+
+        it( '#A given user can delete your own entry', async () => {
+            const user1 = await factory.createUser();
+            
+            const entry = await factory.createEntry( user1.id );
+            const route = `/users/${user1.id}/entries/${entry.id}`;
+            const tokenForUser1 = factory.createTokenForUser( user1.id );
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( async res => {
+                    const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( deletedEntry ).to.be.equal( null );
+                });
+        });
+
+        it( '#Admins can delete users entries', async () => {
+            const user1 = await factory.createUser();
+            const admin = await factory.createUser();
+            
+            const entry = await factory.createEntry( user1.id );
+            const route = `/users/${user1.id}/entries/${entry.id}`;
+            
+            const tokenForAdmin = factory.createTokenForUser( admin.id, 'admin' );
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
+                .expect( async res => {
+                    const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( deletedEntry ).to.be.equal( null );
+                });
+        });
+    });
 });

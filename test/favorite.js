@@ -8,21 +8,21 @@ chai.use(assertArrays);
 const models = require( '../models' );
 const factory = require( './helpers/factory.js' );
 
-describe( "#User Favorite",  () => {        
+describe( '#USER FAVORITES',  () => {        
     before( async function () {
         await models.Favorite.destroy({ where: {} });
         await models.User.destroy({ where: {} });
     });
 
     describe( '#LIST', () => {
-        it( "#Should NOT list favorites for non authenticated users", done => {
+        it( '#Anonymous users cannot list favorites', done => {
             supertest
                 .get( '/users/10000/favorites' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( "#Should NOT list favorites from other user", async () => {
+        it( '#A given user cannot list favorites from other users', async () => {
             const user1      = await factory.createUser();
             const user2      = await factory.createUser();
 
@@ -38,15 +38,13 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-        it( "#Should list favorites of a user", async () => {
+        it( '#A given user can list your own favorites', async () => {
             const user1      = await factory.createUser();
-            const user2      = await factory.createUser();
 
             const routeForUser1      = `/users/${user1.id}/favorites`;
             const tokenForUser1      = factory.createTokenForUser( user1.id );  
     
             await factory.createFavorite( user1.id );
-            await factory.createFavorite( user2.id );
     
             await supertest
                 .get( routeForUser1 )
@@ -55,13 +53,38 @@ describe( "#User Favorite",  () => {
                     expect( res.status ).to.be.equals( 200 );
                     expect( res.body ).to.have.lengthOf( 1 );
                     expect( res.body[0] ).to.have.own.property( 'UserId' );
-                    expect( res.body[0].UserId ).to.not.be.equal( user2.id );
+                    expect( res.body[0].UserId ).to.be.equal( user1.id );
+                });
+        });
+
+        it( '#Admins can list favorites of any user', async () => {
+            const user1      = await factory.createUser();
+            const admin      = await factory.createUser( null, 'admin' );
+
+            const routeForUser1      = `/users/${user1.id}/favorites`;
+            const tokenForAdmin      = factory.createTokenForUser( admin.id, 'admin' );  
+    
+            await factory.createFavorite( user1.id );
+            await factory.createFavorite( user1.id );
+    
+            await supertest
+                .get( routeForUser1 )
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
+                .expect( res => {
+                    expect( res.status ).to.be.equals( 200 );
+                    expect( res.body ).to.have.lengthOf( 2 );
+
+                    expect( res.body[0] ).to.have.own.property( 'UserId' );
+                    expect( res.body[0].UserId ).to.be.equal( user1.id );
+
+                    expect( res.body[1] ).to.have.own.property( 'UserId' );
+                    expect( res.body[1].UserId ).to.be.equal( user1.id );
                 });
         });
     });
 
     describe( '#SHOW', () => {
-        it( "#Should NOT return details for non authenticated users", async () => {
+        it( '#Anonymous users cannot see a favorite details', async () => {
             const route = `/users/1/favorites/1`;
             
             await supertest
@@ -69,7 +92,7 @@ describe( "#User Favorite",  () => {
                 .expect( 401 );
         });
 
-        it( '#Should NOT return details from others users', async () => {
+        it( '#A given user cannot see a favorite of others users', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -83,7 +106,7 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-        it( '#Should NOT return details from others users EVEN if :user_id and :favorite_id are correct', async () => {
+        it( '#A given user cannot see a favorite of others users EVEN if :user_id and :favorite_id are correct', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -97,13 +120,10 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-        it( "#Should return details of a favorite for his owner", async () => {
+        it( '#A given user can see your own favorite', async () => {
             const user1     = await factory.createUser();
-            const user2     = await factory.createUser();
-
             const favorite1 = await factory.createFavorite( user1.id );
-            const favorite2 = await factory.createFavorite( user2.id );
-            
+           
             const routeForUser1     = `/users/${user1.id}/favorites/${favorite1.id}`;
             const tokenForUser1     = factory.createTokenForUser( user1.id );
 
@@ -117,10 +137,29 @@ describe( "#User Favorite",  () => {
                     expect( res.body.UserId ).to.be.equal( user1.id );
                 });
         });
+
+        it( '#Admins can see favorites of any user', async () => {
+            const user1     = await factory.createUser();
+            const admin     = await factory.createUser(null, 'admin');
+            const favorite1 = await factory.createFavorite( user1.id );
+           
+            const routeForUser1     = `/users/${user1.id}/favorites/${favorite1.id}`;
+            const tokenForAdmin     = factory.createTokenForUser( admin.id, 'admin' );
+
+            await supertest
+                .get( routeForUser1 )
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
+                .expect( res => {
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( res.body ).to.not.be.array();
+                    expect( res.body ).to.have.own.property( 'UserId' );
+                    expect( res.body.UserId ).to.be.equal( user1.id );
+                });
+        });
     });
 
     describe( "#CREATE", () => {
-        it( "#Should NOT create a favorite for non authenticated users", async () => {
+        it( '#Anonymous users cannot create favorites', async () => {
             const route = `/users/1/favorites`;
             
             await supertest
@@ -128,7 +167,7 @@ describe( "#User Favorite",  () => {
                 .expect( 401 );
         });
 
-        it( "#Should NOT create a favorite without valid data", async () => {
+        it( '#A given user cannot create a favorite with invalid data', async () => {
             const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
             const token = factory.createTokenForUser( user.id );
@@ -149,7 +188,7 @@ describe( "#User Favorite",  () => {
                 });
         });
 
-        it ( "#Should NOT create favorite for others users", async () => {
+        it ( '#A given user cannot create favorites for others users', async () => {
             const user1  = await factory.createUser();
             const user2  = await factory.createUser();
 
@@ -163,7 +202,7 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-        it( "#Should create favorite", async () => {
+        it( '#A given user can create your own favorites', async () => {
             const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
             const token = factory.createTokenForUser( user.id );
@@ -179,10 +218,29 @@ describe( "#User Favorite",  () => {
                     expect( res.body.data.UserId ).to.be.equal( user.id );
                 });
         });
+
+        it( '#Admins can create favorites for any user', async () => {
+            const user   = await factory.createUser();
+            const admin  = await factory.createUser( null, 'admin' );
+
+            const route = `/users/${user.id}/favorites`;
+            const token = factory.createTokenForUser( admin.id, 'admin' );
+
+            await supertest
+                .post( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .send({ label: 'Favorite', value: 12.99, type: 1, UserId: user.id })
+                .expect( res => {
+                    expect( res.status ).to.be.equal( 201 );
+                    expect( res.body ).to.have.own.property( 'data' );
+                    expect( res.body.data ).to.have.own.property( 'UserId' );
+                    expect( res.body.data.UserId ).to.be.equal( user.id );
+                });
+        });
     });
    
     describe( "#UPDATE", () => {
-        it( "#Should NOT update a favorite if users is unauthenticated", done => {
+        it( '#Anonymous users cannot update favorites', done => {
             const route = `/users/1/favorites/1`;
 
             supertest
@@ -191,7 +249,7 @@ describe( "#User Favorite",  () => {
                 .end( done );
         });
 
-        it( "Should not update favorite from other users", async () => {
+        it( '#A given user cannot update a favorite of others users', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -206,7 +264,7 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-        it( "Should not update favorite from other users EVEN if other user_id is correct", async () => {
+        it( '#A given user cannot update a favorite of others users EVEN if other :user_id and :favorite_id are corrects', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -221,7 +279,7 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-        it( "Should update favorite", async () => {
+        it( '#A given user can update your own favorite', async () => {
             const user     = await factory.createUser();
             const favorite = await factory.createFavorite( user.id );
             
@@ -232,19 +290,49 @@ describe( "#User Favorite",  () => {
                 .put( route )
                 .set( 'Authorization', `Bearer ${token}` )
                 .send( { label: 'Updated Label', type: 0, value: 7.77 } )
-                .expect( 200 );
+                .expect( async res => {
+                    const updatedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( updatedFavorite.label ).to.be.equal( 'Updated Label' );
+                    expect( updatedFavorite.type ).to.be.equal( 0 );
+                    expect( updatedFavorite.value ).to.be.equal( '7.77' );
+                });
+        });
+
+
+        it( '#Admins can update favorites from other users', async () => {
+            const user     = await factory.createUser();
+            const admin    = await factory.createUser( null, 'admin' );
+            const favorite = await factory.createFavorite( user.id );
+            
+            const route     = `/users/${user.id}/favorites/${favorite.id}`;
+            const token     = factory.createTokenForUser( admin.id, 'admin' );
+
+            await supertest
+                .put( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .send( { label: 'Updated Label', type: 0, value: 7.77 } )
+                .expect( async res => {
+                    const updatedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( updatedFavorite.label ).to.be.equal( 'Updated Label' );
+                    expect( updatedFavorite.type ).to.be.equal( 0 );
+                    expect( updatedFavorite.value ).to.be.equal( '7.77' );
+                });
         });
     });
 
     describe( '#DELETE', () => {
-        it( '#Should NOT be possible to non authenticated users remove favorites', done => {
+        it( '#Anonymous users cannot delete a favorite', done => {
             supertest
                 .delete( '/users/1/favorites/1' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#Should no be possible to a user delete favorite of other users', async () => {
+        it( '#A given user cannot delete favorites of others users', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -258,7 +346,7 @@ describe( "#User Favorite",  () => {
                 .expect( 403 ); 
         });
 
-        it( '#Should no be possible to a user delete favorite of other users EVEN if he pass a correct other :user_id and :favorite_id', async () => {
+        it( '#A given user cannot update favorites of others users EVEN if :user_id and :favorite_id are corrects', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -272,13 +360,31 @@ describe( "#User Favorite",  () => {
                 .expect( 403 ); 
         });
 
-        it( '#Should remove a user favorite', async () => {
+        it( '#A given user can delete your own favorites', async () => {
             const user      = await factory.createUser(); 
             const favorite  = await factory.createFavorite( user.id );
             
             const route = `/users/${user.id}/favorites/${favorite.id}`;
             const token = factory.createTokenForUser( user.id );
 
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .expect( async res => {
+                    deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( deletedFavorite ).to.be.equal( null );
+                });
+        });
+
+        it( '#Admins can delete favorites from any user', async () => {
+            const user      = await factory.createUser(); 
+            const admin     = await factory.createUser( null, 'admin' ); 
+            const favorite  = await factory.createFavorite( user.id );
+            
+            const route = `/users/${user.id}/favorites/${favorite.id}`;
+            const token = factory.createTokenForUser( admin.id, 'admin' );
+    
             await supertest
                 .delete( route )
                 .set( 'Authorization', `Bearer ${token}` )
