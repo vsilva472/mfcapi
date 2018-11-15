@@ -7,6 +7,14 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       type: DataTypes.INTEGER
     },
+    UserId: {
+      type: DataTypes.INTEGER(11),
+      onDelete: 'RESTRICT',
+      references: {
+        model: 'Users',
+        key: 'id'
+      }
+    },
     label: {
       type: DataTypes.STRING(20),
       allowNull: false

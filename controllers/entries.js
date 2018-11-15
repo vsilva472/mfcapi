@@ -1,11 +1,19 @@
+'use stric';
+
 const { validationResult }  = require( 'express-validator/check' );
-const repository = require( '../repositories/entry' );
+
+const repository            = require( '../repositories/entry' );
+const categoryRepository    = require( '../repositories/category' ); 
 
 exports.index = async ( req, res, next ) => {
     try {      
-        start = new Date();
-        end   = new Date()
-         
+        const start = new Date();
+        const end   = new Date();
+        const role  = req.role; 
+        
+        const authUserId    = req.userId;
+        const UserId        = req.params.user_id;
+
         if ( req.body.start && req.body.end ) {
             start = new Date( req.body.start );
             end = new Date( req.body.end );
@@ -14,12 +22,35 @@ exports.index = async ( req, res, next ) => {
         start.setHours(0,0,0,0);
         end.setHours(23,59,59,999);
 
+        if ( authUserId != UserId && role !== 'admin' ) 
+            return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
+
         const entries = await repository.allByUserIdAndPeriod( req.params.user_id, start, end );
         res.status(200).json( entries );
     }
     catch ( e ) {
-        console.log( e );
         return res.status( 500 ).json({ message: 'Erro Selecionar registros', error: e });
+    }
+};
+
+exports.show = async ( req, res, next ) => {
+    try {
+        const id        = parseInt(req.params.entry_id, 10);
+        const role      = req.role;
+        const UserId    = parseInt(req.params.user_id, 10);
+
+        const resource = await repository.findOneWithCategories({ id });
+
+        if ( ! resource ) 
+            return res.status( 400 ).json({ message: "Recurso não existe." });
+
+        if ( resource.UserId != UserId && role !== 'admin' ) 
+            return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
+            
+        return res.status(200).json( resource );
+    }
+    catch ( e ) {
+        return res.status( 500 ).json({ message: 'Erro localizar esta entrada.', error: e });
     }
 };
 
@@ -32,12 +63,14 @@ exports.create = async ( req, res, next ) => {
         if ( ! errors.isEmpty() ) 
             return res.status( 422 ).json({ errors: errors.array() });
     
-        var entry = await repository.create( { label, value, type, UserId, registeredAt } );
-    
-        if ( categories && categories.length ) {
+        if ( categories ) {
+            const entry = await repository.create( { label, value, type, UserId, registeredAt } );      
             await entry.setCategories( categories );
+            
+            return res.status(201).json({ message: 'Registro adicionado com sucesso 1', data: entry });
         }
 
+        const entry = await repository.create( { label, value, type, UserId, registeredAt } );
         res.status(201).json({ message: 'Registro adicionado com sucesso', data: entry });
     } 
     catch ( e ) {
@@ -46,32 +79,33 @@ exports.create = async ( req, res, next ) => {
     }
 };
 
-exports.show = async ( req, res, next ) => {
-    try {
-        
-        const data = { id: parseInt(req.params.entry_id, 10), UserId: req.params.user_id };
-        
-        var entry = await repository.findOneWithCategories( data );
-        
-        if ( ! entry ) return res.status(200).json(null);
-    
-        return res.status(200).json( entry );
-    }
-    catch ( e ) {
-        console.log( e );
-        return res.status( 500 ).json({ message: 'Erro localizar esta entrada.', error: e });
-    }
-};
-
 exports.update = async ( req, res, next ) => {
     try {
-        const data  = { ...req.body };
-        const where = { UserId: req.params.user_id, id: req.params.entry_id };
+        const errors    = validationResult( req );
+        const id        = parseInt(req.params.entry_id, 10);
+        const role      = req.role;
+        const UserId    = parseInt(req.params.user_id, 10);
 
-        if ( data.id ) delete data.id;
-        if ( data.UserId ) delete data.UserId;
+        const { label, value, type, registeredAt } = req.body;
+        const data = {};
         
-        await repository.update( data, { where: where } );    
+        if ( ! errors.isEmpty() ) 
+            return res.status( 422 ).json({ errors: errors.array() });
+
+        const resource = await repository.findOne( { id } );
+
+        if ( ! resource ) 
+            return res.status( 400 ).json({ message: "Não conseguimos localizar a entrar para atualizá-la." });
+
+        if ( resource.UserId != UserId && role !== 'admin' ) 
+            return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
+
+        if ( label ) data.label = label;
+        if ( value ) data.value = value;
+        if ( type ) data.type = type;
+        if ( registeredAt ) data.registeredAt = registeredAt;
+        
+        await repository.update( data, { where: { id, UserId } } );    
         return res.status(200).json({ message: "Entrada atualizada com sucesso" });
     }
     catch ( e ) {

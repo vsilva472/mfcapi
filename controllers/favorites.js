@@ -3,7 +3,7 @@ const repository = require( '../repositories/favorite' );
 
 exports.index = async ( req, res, next ) => {
     try {
-        const favorites = await repository.allByUserId( req.userId );
+        const favorites = await repository.allByUserId( req.params.user_id );
         res.status(200).json( favorites );
     }
     catch ( e ) {
@@ -32,7 +32,6 @@ exports.create = async ( req, res, next ) => {
 
     }
     catch ( e ) {
-        console.log( e );
         return res.status( 500 ).json({ message: 'Erro ao criar favorito', error: e });
     }
 };
@@ -57,7 +56,6 @@ exports.show = async ( req, res, next ) => {
         return res.status(200).json({ id: resource.id, label: resource.label, value: resource.value, type: resource.type, UserId: resource.UserId });
     }
     catch ( e ) {
-        console.log( e );
         return res.status( 500 ).json({ message: 'Erro localizar Favorito', error: e });
     }
 };
@@ -84,7 +82,6 @@ exports.update = async ( req, res, next ) => {
         return res.status(200).json({ message: "Favorito atualizado com sucesso" });
     }
     catch ( e ) {
-        console.log( e );
         return res.status( 500 ).json({ message: 'Erro ao atualizar favorito', error: e });
     }
 };
@@ -107,10 +104,10 @@ exports.destroy = async ( req, res, next ) => {
             return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
 
         await repository.destroy( { where: { UserId, id: favoriteId } } );
+        
         res.status(200).json({ message: "Favorito removida com sucesso." });
     }
     catch ( e ) {
-        //console.log( e );
         return res.status( 500 ).json({ message: 'Erro ao remover favorito', error: e });
     }
 }

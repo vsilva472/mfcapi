@@ -29,9 +29,9 @@ router.get( '/:user_id/favorites', [ Auth, Gate ] , FavoriteController.index );
 
 // ENTRIES ROUTES
 router.delete( '/:user_id/entries/:entry_id', [ Auth ], EntryController.destroy );
-router.put( '/:user_id/entries/:entry_id', [ Auth ], EntryController.update );
-router.get( '/:user_id/entries/:entry_id', [ Auth ], EntryController.show );
-router.post( '/:user_id/entries', [ Auth ].concat( EntryValidator.create ), EntryController.create );
-router.get( '/:user_id/entries', [ Auth ] , EntryController.index );
+router.put( '/:user_id/entries/:entry_id', [ Auth, Gate ].concat( EntryValidator.update ), EntryController.update );
+router.get( '/:user_id/entries/:entry_id', [ Auth, Gate ], EntryController.show );
+router.post( '/:user_id/entries', [ Auth, Gate ].concat( EntryValidator.create ), EntryController.create );
+router.get( '/:user_id/entries', [ Auth, Gate ] , EntryController.index );
 
 module.exports = router;

@@ -5,25 +5,11 @@ const expect        = chai.expect;
 const assertArrays  = require('chai-arrays');
 chai.use(assertArrays);
 
-const jwt           = require( 'jsonwebtoken' );
-const jwtConfig     = require( '../config/jwt' );
-
 const models = require( '../models' );
-
-const test = {
-    createUser: async ( email, name = 'my name', password = '123456' ) => {
-        return await models.User.create({ name, email, password });
-    },
-    createFavorite: async ( UserId ) => {
-        return await models.Favorite.create({ UserId, label: "My Favorite", value: 21.77, type: 1 });
-    },
-    createTokenForUser: ( id, role = 'user' ) => {
-        return jwt.sign({ id, role }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
-    }
-};
+const factory = require( './helpers/factory.js' );
 
 describe( "#User Favorite",  () => {        
-    beforeEach( async function () {
+    before( async function () {
         await models.Favorite.destroy({ where: {} });
         await models.User.destroy({ where: {} });
     });
@@ -37,14 +23,14 @@ describe( "#User Favorite",  () => {
         });
 
         it( "#Should NOT list favorites from other user", async () => {
-            const user1      = await test.createUser( 'foo1@bar' );
-            const user2      = await test.createUser( 'foo2@bar' );
+            const user1      = await factory.createUser();
+            const user2      = await factory.createUser();
 
             const routeForUser2      = `/users/${user2.id}/favorites`;
-            const tokenForUser1      = test.createTokenForUser( user1.id );  
+            const tokenForUser1      = factory.createTokenForUser( user1.id );  
     
-            await test.createFavorite( user1.id );
-            await test.createFavorite( user2.id );
+            await factory.createFavorite( user1.id );
+            await factory.createFavorite( user2.id );
     
             await supertest
                 .get( routeForUser2 )
@@ -52,16 +38,15 @@ describe( "#User Favorite",  () => {
                 .expect( 403 );
         });
 
-
         it( "#Should list favorites of a user", async () => {
-            const user1      = await test.createUser( 'foo1@bar' );
-            const user2      = await test.createUser( 'foo2@bar' );
+            const user1      = await factory.createUser();
+            const user2      = await factory.createUser();
 
             const routeForUser1      = `/users/${user1.id}/favorites`;
-            const tokenForUser1      = test.createTokenForUser( user1.id );  
+            const tokenForUser1      = factory.createTokenForUser( user1.id );  
     
-            await test.createFavorite( user1.id );
-            await test.createFavorite( user2.id );
+            await factory.createFavorite( user1.id );
+            await factory.createFavorite( user2.id );
     
             await supertest
                 .get( routeForUser1 )
@@ -77,20 +62,20 @@ describe( "#User Favorite",  () => {
 
     describe( '#SHOW', () => {
         it( "#Should NOT return details for non authenticated users", async () => {
-            const route = `/users/1/favorites`;
+            const route = `/users/1/favorites/1`;
             
             await supertest
-                .post( route )
+                .get( route )
                 .expect( 401 );
         });
 
         it( '#Should NOT return details from others users', async () => {
-            const user1     = await test.createUser( 'foo1@bar' );
-            const user2     = await test.createUser( 'foo2@bar' );
+            const user1     = await factory.createUser();
+            const user2     = await factory.createUser();
 
-            const favorite2 = await test.createFavorite( user2.id );
+            const favorite2 = await factory.createFavorite( user2.id );
             const route     = `/users/${user1.id}/favorites/${favorite2.id}`;
-            const token     = test.createTokenForUser( user1.id ); 
+            const token     = factory.createTokenForUser( user1.id ); 
 
             await supertest
                 .get( route )
@@ -99,12 +84,12 @@ describe( "#User Favorite",  () => {
         });
 
         it( '#Should NOT return details from others users EVEN if :user_id and :favorite_id are correct', async () => {
-            const user1     = await test.createUser( 'foo1@bar' );
-            const user2     = await test.createUser( 'foo2@bar' );
+            const user1     = await factory.createUser();
+            const user2     = await factory.createUser();
 
-            const favorite2 = await test.createFavorite( user2.id );
+            const favorite2 = await factory.createFavorite( user2.id );
             const routeForUser2     = `/users/${user2.id}/favorites/${favorite2.id}`;
-            const tokenForUser1     = test.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1.id );
 
             await supertest
                 .get( routeForUser2 )
@@ -113,14 +98,14 @@ describe( "#User Favorite",  () => {
         });
 
         it( "#Should return details of a favorite for his owner", async () => {
-            const user1     = await test.createUser( 'foo1@bar' );
-            const user2     = await test.createUser( 'foo2@bar' );
+            const user1     = await factory.createUser();
+            const user2     = await factory.createUser();
 
-            const favorite1 = await test.createFavorite( user1.id );
-            const favorite2 = await test.createFavorite( user2.id );
+            const favorite1 = await factory.createFavorite( user1.id );
+            const favorite2 = await factory.createFavorite( user2.id );
             
             const routeForUser1     = `/users/${user1.id}/favorites/${favorite1.id}`;
-            const tokenForUser1     = test.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1.id );
 
             await supertest
                 .get( routeForUser1 )
@@ -144,9 +129,9 @@ describe( "#User Favorite",  () => {
         });
 
         it( "#Should NOT create a favorite without valid data", async () => {
-            const user  = await test.createUser( 'foo1@bar' );
+            const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
-            const token = test.createTokenForUser( user.id );
+            const token = factory.createTokenForUser( user.id );
             
             await supertest
                 .post( route )
@@ -165,11 +150,11 @@ describe( "#User Favorite",  () => {
         });
 
         it ( "#Should NOT create favorite for others users", async () => {
-            const user1  = await test.createUser( 'foo1@bar' );
-            const user2  = await test.createUser( 'foo2@bar' );
+            const user1  = await factory.createUser();
+            const user2  = await factory.createUser();
 
             const routeForUser2 = `/users/${user2.id}/favorites`;
-            const tokenForUser1 = test.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1.id );
 
             await supertest
                 .post( routeForUser2 )
@@ -179,9 +164,9 @@ describe( "#User Favorite",  () => {
         });
 
         it( "#Should create favorite", async () => {
-            const user  = await test.createUser( 'foo1@bar' );
+            const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
-            const token = test.createTokenForUser( user.id );
+            const token = factory.createTokenForUser( user.id );
 
             await supertest
                 .post( route )
@@ -207,12 +192,12 @@ describe( "#User Favorite",  () => {
         });
 
         it( "Should not update favorite from other users", async () => {
-            const user1     = await test.createUser( 'foo1@bar' );
-            const user2     = await test.createUser( 'foo2@bar' );
+            const user1     = await factory.createUser();
+            const user2     = await factory.createUser();
 
-            const favorite2 = await test.createFavorite( user2.id );
+            const favorite2 = await factory.createFavorite( user2.id );
             const routeForFavorite2     = `/users/${user1.id}/favorites/${favorite2.id}`;
-            const tokenForUser1     = test.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1.id );
 
             await supertest
                 .put( routeForFavorite2 )
@@ -222,12 +207,12 @@ describe( "#User Favorite",  () => {
         });
 
         it( "Should not update favorite from other users EVEN if other user_id is correct", async () => {
-            const user1     = await test.createUser( 'foo1@bar' );
-            const user2     = await test.createUser( 'foo2@bar' );
+            const user1     = await factory.createUser();
+            const user2     = await factory.createUser();
 
-            const favorite2 = await test.createFavorite( user2.id );
+            const favorite2 = await factory.createFavorite( user2.id );
             const routeForUser2Favorite2     = `/users/${user2.id}/favorites/${favorite2.id}`;
-            const tokenForUser1     = test.createTokenForUser( user1.id );
+            const tokenForUser1     = factory.createTokenForUser( user1.id );
 
             await supertest
                 .put( routeForUser2Favorite2 )
@@ -237,11 +222,11 @@ describe( "#User Favorite",  () => {
         });
 
         it( "Should update favorite", async () => {
-            const user     = await test.createUser( 'foo1@bar' );
-            const favorite = await test.createFavorite( user.id );
+            const user     = await factory.createUser();
+            const favorite = await factory.createFavorite( user.id );
             
             const route     = `/users/${user.id}/favorites/${favorite.id}`;
-            const token     = test.createTokenForUser( user.id );
+            const token     = factory.createTokenForUser( user.id );
 
             await supertest
                 .put( route )
@@ -260,12 +245,12 @@ describe( "#User Favorite",  () => {
         });
 
         it( '#Should no be possible to a user delete favorite of other users', async () => {
-            const user1 = await test.createUser( 'foo1@bar' );
-            const user2 = await test.createUser( 'foo2@bar' );
+            const user1 = await factory.createUser();
+            const user2 = await factory.createUser();
             
-            const favoriteOfUser2 = await test.createFavorite( user2.id );
+            const favoriteOfUser2 = await factory.createFavorite( user2.id );
             const route = `/users/${user1.id}/favorites/${favoriteOfUser2.id}`;
-            const tokenForUser1 = test.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1.id );
 
             await supertest
                 .delete( route )
@@ -274,12 +259,12 @@ describe( "#User Favorite",  () => {
         });
 
         it( '#Should no be possible to a user delete favorite of other users EVEN if he pass a correct other :user_id and :favorite_id', async () => {
-            const user1 = await test.createUser( 'foo1@bar' );
-            const user2 = await test.createUser( 'foo2@bar' );
+            const user1 = await factory.createUser();
+            const user2 = await factory.createUser();
             
-            const favoriteOfUser2 = await test.createFavorite( user2.id );
+            const favoriteOfUser2 = await factory.createFavorite( user2.id );
             const routeForUser2 = `/users/${user2.id}/favorites/${favoriteOfUser2.id}`;
-            const tokenForUser1 = test.createTokenForUser( user1.id );
+            const tokenForUser1 = factory.createTokenForUser( user1.id );
 
             await supertest
                 .delete( routeForUser2 )
@@ -288,11 +273,11 @@ describe( "#User Favorite",  () => {
         });
 
         it( '#Should remove a user favorite', async () => {
-            const user      = await test.createUser( 'foo1@bar' ); 
-            const favorite  = await test.createFavorite( user.id );
+            const user      = await factory.createUser(); 
+            const favorite  = await factory.createFavorite( user.id );
             
             const route = `/users/${user.id}/favorites/${favorite.id}`;
-            const token = test.createTokenForUser( user.id );
+            const token = factory.createTokenForUser( user.id );
 
             await supertest
                 .delete( route )

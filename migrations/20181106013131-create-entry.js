@@ -8,6 +8,14 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      UserId: {
+        type: Sequelize.INTEGER(11),
+        onDelete: 'RESTRICT',
+        references: {
+          model: 'Users',
+          key: 'id'
+        }
+      },
       label: {
         type: Sequelize.STRING(20),
         allowNull: false
@@ -19,14 +27,6 @@ module.exports = {
       value: {
         type: Sequelize.DECIMAL(10,2),
         allowNull: false
-      },
-      UserId: {
-        type: Sequelize.INTEGER(11),
-        onDelete: 'CASCADE',
-        references: {
-          model: 'Users',
-          key: 'id'
-        }
       },
       registeredAt: {
         allowNull: false,
