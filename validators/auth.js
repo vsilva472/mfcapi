@@ -32,8 +32,9 @@ exports.signup = [
         .isLength({min: 3, max: 21}).withMessage( messages.password.invalid ),
 
     check( 'password_conf' )
-        .custom( ( password_conf, { req } ) => {
-            return password_conf === req.body.password;
+        .custom( ( value, { req } ) => {
+            if ( ! value || ( value !== req.body.password ) ) return false;
+            return true;
         } ).withMessage( messages.password_conf.invalid )
 
 ];
@@ -59,7 +60,8 @@ exports.password_reset = [
         .isLength({ min: 3, max: 21 }).withMessage( messages.password.invalid ),
 
     check( 'password_conf' )
-        .custom( ( password_conf, { req } ) => {
-            return password_conf === req.body.password;
+        .custom( ( value, { req } ) => {
+            if ( ! value || ( value !== req.body.password ) ) return false;
+            return true;
         }).withMessage( messages.password_conf.invalid )
 ];

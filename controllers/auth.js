@@ -12,10 +12,14 @@ exports.Signup = async ( req, res, next ) => {
         if ( ! errors.isEmpty() ) 
             return res.status(422).json({ errors: errors.array() });
 
-        const user = await repository.create( req.body );
+        await repository.create({ 
+            name: req.body.name, 
+            email: req.body.email, 
+            password: req.body.password 
+        });
 
         // Todo send welcome email
-        res.status( 201 ).json( { message: "Cadastro realizado com sucesso", user } )
+        res.status( 201 ).json( { message: "Cadastro realizado com sucesso" } )
     }
     catch ( err ) {
         res.status( 500 ).json({ message: "Erro ao cadastrar usuário", err });
@@ -34,8 +38,8 @@ exports.Signin = async ( req, res, next ) => {
 
         if ( ! user || ! await user.comparePassword( password ) ) 
             return res.status( 401 ).json( { message: 'Email e/ou Senha inválidos.' } );
-
-        const token = jwt.sign({ id: user.id }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        
+        const token = jwt.sign({ id: user.id, role: user.role}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
         
         res.status( 200 ).json({ user: {
             id: user.id,

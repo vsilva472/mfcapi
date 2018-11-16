@@ -24,11 +24,17 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING(100),
-      allowNull: false
+      allowNull: false,
+      unique: true
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    role: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      defaultValue: 'user'
     },
     password_reset_token: {
       type: DataTypes.STRING(4),
@@ -39,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null
-    },
+    }
   }, {
     hooks: {
       beforeCreate: encryptPassword,

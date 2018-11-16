@@ -1,7 +1,7 @@
 const Category  = require( '../models' ).Category;
 
 exports.allByUserId = async ( user_id ) => {
-    const userCategories = await Category.findAll( { where: { userId: user_id } } );
+    const userCategories = await Category.findAll( { where: { UserId: user_id } } );
     return userCategories;
 };
 
