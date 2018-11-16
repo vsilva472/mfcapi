@@ -14,11 +14,11 @@ const EntryController = require( '../controllers/entries' );
 const EntryValidator  = require( '../validators/entry' );
 
 // CATEGORY ROUTES
-router.delete( '/:user_id/categories/:category_id', [ Auth ], CategoryController.destroy );
-router.put( '/:user_id/categories/:category_id', [ Auth ], CategoryController.update );
-router.get( '/:user_id/categories/:category_id', [ Auth ], CategoryController.show );
-router.post( '/:user_id/categories', [ Auth ].concat( CategoryValidator.create ), CategoryController.create );
-router.get( '/:user_id/categories', [ Auth ] , CategoryController.index );
+router.delete( '/:user_id/categories/:category_id', [ Auth, Gate ], CategoryController.destroy );
+router.put( '/:user_id/categories/:category_id', [ Auth, Gate ], CategoryController.update );
+router.get( '/:user_id/categories/:category_id', [ Auth, Gate ], CategoryController.show );
+router.post( '/:user_id/categories', [ Auth, Gate ].concat( CategoryValidator.create ), CategoryController.create );
+router.get( '/:user_id/categories', [ Auth, Gate ] , CategoryController.index );
 
 // FAVORITE ROUTES
 router.delete( '/:user_id/favorites/:favorite_id', [ Auth, Gate ], FavoriteController.destroy );

@@ -8,14 +8,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      label: {
-        type: Sequelize.STRING(25),
-        allowNull: false,
-      },
-      color: {
-        type: Sequelize.STRING(7),
-        allowNull: false,
-      },
       UserId: {
         type: Sequelize.INTEGER(11),
         onDelete: 'CASCADE',
@@ -23,6 +15,14 @@ module.exports = {
           model: 'Users',
           key: 'id'
         }
+      },
+      label: {
+        type: Sequelize.STRING(25),
+        allowNull: false,
+      },
+      color: {
+        type: Sequelize.STRING(7),
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,

@@ -37,12 +37,12 @@ exports.create = async ( req, res, next ) => {
         const errors    = validationResult( req );
         const role      = req.role;
         const UserId    = parseInt(req.params.user_id, 10);
-        const authenticatedUserId = req.userId;
+        
+        const authenticatedUserId       = req.userId;
+        const { label, value, type }    = req.body;
 
         if ( ! errors.isEmpty() ) 
             return res.status( 422 ).json({ errors: errors.array() });
-
-        const { label, value, type } = req.body;
 
         if ( authenticatedUserId != UserId && role !== 'admin' ) 
             return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
@@ -59,27 +59,25 @@ exports.create = async ( req, res, next ) => {
 
 exports.update = async ( req, res, next ) => {
     try {
-        const data = { ...req.body };
-        const UserId = req.params.user_id;
-        const where  = { UserId, id: req.params.favorite_id };
-        const role = req.role;
+        const id        = req.params.favorite_id;
+        const UserId    = req.params.user_id;
+        const where     = { UserId, id };
+        const role      = req.role;
+        const { label, value, type, registeredAt } = req.body;
 
-        // select resource
-        const resource = await repository.findOne( { id: req.params.favorite_id } );
+        const resource = await repository.findOne( { id } );
 
-        // resource not found
         if ( ! resource ) 
-            return res.status( 400 ).json({ message: "Recurso não existe." });
+            return res.status( 400 ).json({ message: "Favorito não encontrado." });
 
-        // user not is owner of resource neither is an admin
         if ( resource.UserId != UserId && role !== 'admin' ) 
             return res.status( 403 ).json({ message: "Você não tem permissão para isso." });
         
-        await repository.update( data, { where: where } );    
-        return res.status(200).json({ message: "Favorito atualizado com sucesso" });
+        await repository.update( { label, value, type, registeredAt }, { where: where } );    
+        return res.status(200).json({ message: "Favorito atualizado com sucesso." });
     }
     catch ( e ) {
-        return res.status( 500 ).json({ message: 'Erro ao atualizar favorito', error: e });
+        return res.status( 500 ).json({ message: 'Erro ao atualizar favorito.', error: e });
     }
 };
 
