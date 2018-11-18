@@ -5,7 +5,7 @@ module.exports = {
     return queryInterface.createTable( 'EntryCategories', { 
       CategoryId: {
         type: Sequelize.INTEGER,
-        onDelete: 'CASCADE',
+        onDelete: 'RESTRICT',
         references: {
           model: 'Categories',
           key: 'id'
@@ -13,7 +13,7 @@ module.exports = {
       },
       EntryId: {
         type: Sequelize.INTEGER,
-        onDelete: 'CASCADE',
+        onDelete: 'RESTRICT',
         references: {
           model: 'Entries',
           key: 'id'

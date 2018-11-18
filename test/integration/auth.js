@@ -1,43 +1,43 @@
-const express       = require( '../app' );
+'use strict'
+
+const express       = require( '../../app' );
 const supertest     = require( 'supertest' )( express );
 const chai          = require( 'chai' );
 const expect       = chai.expect;
 const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
-const models    = require( '../models' );
-const factory   = require( './helpers/factory.js' );
-
-const routeBase             = '/auth/password/reset/';
-const routeWithFakeToken    = `${routeBase}1234789`;
-
-const passwordRecoverRoute  = '/auth/password/recover';
+const models    = require( '../../models' );
+const factory   = require( '../helpers/factory.js' );
+const databaseHelper   = require( '../helpers/db.js' );
 
 const routes = {
     signin: '/auth/signin',
     signup: '/auth/signup',
-    password: {  recover: '/auth/password/recover',  reset: '/auth/password/reset/' }
+    password: {  
+        recover: '/auth/password/recover',  
+        reset: ( token = '' )  => {
+            return `/auth/password/reset/${token}`;
+        }
+    }
 };
 
 describe( '#AUTH', () => {
-    before( async function () {
-        await models.Favorite.destroy({ where: {} });
-        await models.User.destroy({ where: {} });
-    });
+    before( databaseHelper.clearTables );
 
     describe( "#PASSWORD RESET",  () => {
-        it( '#A given signed user cannot recover password', done => {
+        it( 'A given signed user cannot recover password', done => {
             supertest
-                    .post( routeWithFakeToken )
-                    .set( 'Authorization', 'Bearer fake token here' )
-                    .expect('Content-Type', /json/)
-                    .expect( 403 )
-                    .end( done );
+                .post( routes.password.reset('abc') )
+                .set( 'Authorization', 'Bearer fake token here' )
+                .expect('Content-Type', /json/)
+                .expect( 403 )
+                .end( done );
         });
     
-        it( '#A given user cannot reset password with invalid data', done => {
+        it( 'A given user cannot reset password with invalid data', done => {
             supertest
-                .post( routeWithFakeToken )
+                .post( routes.password.reset('abc') )
                 .end( ( err, res ) => {
                     if ( err ) return done( err );
                     expect( res.status ).to.be.equal( 422 );
@@ -49,15 +49,15 @@ describe( '#AUTH', () => {
                 });
         });
     
-        it( '#A given non registered user cannot recover password', done => {
+        it( 'A given non registered user cannot recover password', done => {
             supertest
-                .post( routeWithFakeToken )
+                .post( routes.password.reset('abc') )
                 .send({ email: 'nonexisting@email.com', password: '44444444', password_conf: '44444444' })
                 .expect( 400 )
                 .end( done );
         });
     
-        it( '#A given user cannot reset password with a expired token', async () => {
+        it( 'A given user cannot reset password with a expired token', async () => {
             const user  = await factory.createUser();
             const now   = new Date();
             now.setHours( now.getHours() - 1 );
@@ -67,16 +67,16 @@ describe( '#AUTH', () => {
             await user.save();
             
             await supertest
-                .post( `${routeBase}${user.password_reset_token}` )
+                .post( routes.password.reset( user.password_reset_token ) )
                 .send({ email: user.email, password: 'new pass', password_conf: 'new pass' })
                 .expect( 400 );
         });
     });
 
     describe( '#PASSWORD RECOVER', () => {
-        it( "#A given user cannot recover password if he is authenticated", done => {
+        it( "A given user cannot recover password if he is authenticated", done => {
             supertest
-                .post( passwordRecoverRoute )
+                .post( routes.password.recover )
                 .set( 'Authorization', 'Bearer fake token here' )
                 .send( { email: 'foo@bar.net' } )
                 .expect('Content-Type', /json/)
@@ -84,20 +84,20 @@ describe( '#AUTH', () => {
                 .end( done ); 
         });
 
-        it( '#A given with non registered email must receive 200 as status', done => {
+        it( 'A given with non registered email must receive 200 as status', done => {
             supertest
-                .post( passwordRecoverRoute )
+                .post( routes.password.recover )
                 .send( { email: "foo@bar.net" } )
                 .expect('Content-Type', /json/)
                 .expect( 200 )
                 .end( done );
         });
 
-        it( '#A given user must can recover password', async () => {
+        it( 'A given user must can recover password', async () => {
             const user = await factory.createUser();
 
             await supertest
-                .post( passwordRecoverRoute )
+                .post( routes.password.recover )
                 .send( { email: user.email } )
                 .expect( async res => {
                     const checkUser = await models.User.findOne({ where: { email: user.email } });
@@ -109,7 +109,7 @@ describe( '#AUTH', () => {
     });
 
     describe( '#SIGNIN', () => {
-        it( '#A given authenticated user cannot re-signin', done => {
+        it( 'A given authenticated user cannot re-signin', done => {
             supertest
                 .post( routes.signin )
                 .set( 'Authorization', 'Bearer fake token here' )
@@ -118,7 +118,7 @@ describe( '#AUTH', () => {
                 .end( done );
         });
 
-        it( '#A given user cannot signin with invalid data', done => {
+        it( 'A given user cannot signin with invalid data', done => {
             supertest
                 .post( routes.signin )
                 .end( ( err, res ) => {
@@ -141,7 +141,7 @@ describe( '#AUTH', () => {
                 });
         });
 
-        it( '#A given registered user can sign', async () => {
+        it( 'A given registered user can sign', async () => {
             const user = await factory.createUser();
 
             await supertest
@@ -171,7 +171,7 @@ describe( '#AUTH', () => {
     });
 
     describe( '#SIGNUP', () => {
-        it( '#A given authenticated user cannot signup', done => {
+        it( 'A given authenticated user cannot signup', done => {
             supertest
                 .post( routes.signup )
                 .set( 'Authorization', 'Bearer fake_token_here' )
@@ -180,7 +180,7 @@ describe( '#AUTH', () => {
                 .end( done );
         });
         
-        it( '#A given user cannot signup with invalid data', done => {
+        it( 'A given user cannot signup with invalid data', done => {
             supertest
                 .post( routes.signup )
                 .end( (err, res) => {
@@ -208,7 +208,7 @@ describe( '#AUTH', () => {
                 });
         });
 
-        it( '#A given registered user cannot signup with same email', async () => {
+        it( 'A given registered user cannot signup with same email', async () => {
             const user = await factory.createUser();
             const newUserData = {email: user.email, name: 'My name', password: '123456', password_conf: '123456'};
             
@@ -225,7 +225,7 @@ describe( '#AUTH', () => {
                 }); 
         });
 
-        it( '#A given unregistered user can signup', async () => {
+        it( 'A given unregistered user can signup', async () => {
             const userData = { name: 'Hinata Uzumaki', email: 'hinata_sama@konoha.jp', password: '123456', password_conf: '123456' };
             
             await supertest

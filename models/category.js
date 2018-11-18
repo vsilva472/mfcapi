@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     UserId: {
       type: DataTypes.INTEGER(11),
-      onDelete: 'CASCADE',
+      onDelete: 'RESTRICT',
       references: {
         model: 'Users',
         key: 'id'
@@ -28,12 +28,13 @@ module.exports = (sequelize, DataTypes) => {
     // associations can be defined here
     Category.belongsTo(models.User, {
       foreignKey: 'UserId',
-      onDelete: 'CASCADE'
+      onDelete: 'RESTRICT'
     });
 
     Category.belongsToMany( models.Entry, {
         through: 'EntryCategories',
-        foreignKey: 'CategoryId'
+        foreignKey: 'CategoryId',
+        onDelete: 'RESTRICT'
     });
   };
   return Category;

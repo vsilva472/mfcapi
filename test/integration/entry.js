@@ -1,34 +1,29 @@
-/** 
- * Todo 
- * 1. Create sanitizer to remove duplicate categories
- * 2. Create validator that check if category already is associate within a model to avoid duplicates
- */
+'use strict'
 
-const express       = require( '../app' );
+const express       = require( '../../app' );
 const supertest     = require( 'supertest' )( express );
 const chai          = require( 'chai' );
 const expect       = chai.expect;
 const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
-const models    = require( '../models' );
-const factory   = require( './helpers/factory.js' );
+const models    = require( '../../models' );
+
+const factory           = require( '../helpers/factory.js' );
+const databaseHelper    = require( '../helpers/db.js' );
 
 describe( "#User Entries",  () => {
-    before( async function () {
-        await models.Entry.destroy({ where: {} });
-        await models.User.destroy({ where: {} });
-    });
+    before( databaseHelper.clearTables );
 
     describe( '#LIST', () => {
-        it( '#Anonymous user cannot list users', done => {
+        it( 'Anonymous user cannot list users', done => {
             supertest
                 .get( '/users/1/entries' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#A given user cannot list entry from other user', async () => {
+        it( 'A given user cannot list entry from other user', async () => {
             const user1      = await factory.createUser();
             const user2      = await factory.createUser();
 
@@ -44,7 +39,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can list your own entries', async () => {
+        it( 'A given user can list your own entries', async () => {
             const user1      = await factory.createUser();
             const user2      = await factory.createUser();
 
@@ -66,7 +61,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#Admins can list entries of any user', async () => {
+        it( 'Admins can list entries of any user', async () => {
             const user1      = await factory.createUser();
             const user2      = await factory.createUser();
             const admin      = await factory.createUser( null, 'admin' );
@@ -92,14 +87,14 @@ describe( "#User Entries",  () => {
     });
 
     describe( '#SHOW', () => {
-        it( '#Anonymous cannot view an entry', done => {
+        it( 'Anonymous cannot view an entry', done => {
                 supertest
                     .get( '/users/1/entries/1' )
                     .expect( 401 )
                     .end( done );
         });
 
-        it( '#A given user cannot view an entry of other users', async () => {
+        it( 'A given user cannot view an entry of other users', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
             
@@ -115,7 +110,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user cannot view an entry of other users even if he pass correct :user_id and :entry_id', async () => {
+        it( 'A given user cannot view an entry of other users even if he pass correct :user_id and :entry_id', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
             
@@ -131,7 +126,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can view your own entries', async () => {
+        it( 'A given user can view your own entries', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
             
@@ -151,7 +146,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#Admins can view entries of any user', async () => {
+        it( 'Admins can view entries of any user', async () => {
             const user      = await factory.createUser();
             const admin     = await factory.createUser( null, 'admin' );
             
@@ -172,14 +167,14 @@ describe( "#User Entries",  () => {
     });
 
     describe( '#CREATE', () => {
-        it( '#Anonymous users cannot create entries', done => {
+        it( 'Anonymous users cannot create entries', done => {
             supertest
                 .post( '/users/1/entries' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#A given user cannot create an entry for another user', async () => {
+        it( 'A given user cannot create an entry for another user', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -193,7 +188,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user cannot create an entry with invalid data', async () => {
+        it( 'A given user cannot create an entry with invalid data', async () => {
             const user1 = await factory.createUser();
   
             const routeForUser1 = `/users/${user1.id}/entries`;
@@ -223,7 +218,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#A given user can create your own entries', async () => {
+        it( 'A given user can create your own entries', async () => {
             const user1 = await factory.createUser();
 
             const routeForUser1 = `/users/${user1.id}/entries`;
@@ -245,7 +240,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#A given user cannot create an entry with categories of other user', async () => {
+        it( 'A given user cannot create an entry with categories of other user', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
 
@@ -276,7 +271,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#A given user can create an entry with your own categories', async () => {
+        it( 'A given user can create an entry with your own categories', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
     
@@ -305,7 +300,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#Admins can create entries for any user', async () => {
+        it( 'Admins can create entries for any user', async () => {
             const user1 = await factory.createUser();
             const admin = await factory.createUser( null, 'admin' );
 
@@ -330,14 +325,14 @@ describe( "#User Entries",  () => {
     });
 
     describe( '#UPDATE', () => {
-        it( '#Anonymous user cannot update an entry', done => {
+        it( 'Anonymous user cannot update an entry', done => {
             supertest
                 .put( '/users/1/entries/1' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#A given user cannot update an entry of other user', async () => {
+        it( 'A given user cannot update an entry of other user', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
 
@@ -353,7 +348,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( "#A given user cannot update an entry of other users EVEN if other :user_id and :entry_id are corrects", async () => {
+        it( "A given user cannot update an entry of other users EVEN if other :user_id and :entry_id are corrects", async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -368,7 +363,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user cannot update an entry with invalid data', async () => {
+        it( 'A given user cannot update an entry with invalid data', async () => {
             const user1 = await factory.createUser();
             const entry = await factory.createEntry( user1.id );
   
@@ -399,7 +394,7 @@ describe( "#User Entries",  () => {
                 });
         });
     
-        it( "#A given user can update your own entry", async () => {
+        it( "A given user can update your own entry", async () => {
             const user1     = await factory.createUser();
 
             const entryForUser1    = await factory.createEntry( user1.id );
@@ -413,7 +408,7 @@ describe( "#User Entries",  () => {
                 .expect( 200 );
         });
 
-        it( "#Admins can update entries for any user", async () => {
+        it( "Admins can update entries for any user", async () => {
             const user1     = await factory.createUser();
             const admin     = await factory.createUser( null, 'admin' );
 
@@ -431,14 +426,14 @@ describe( "#User Entries",  () => {
     });
 
     describe( '#DELETE', () => {
-        it( '#Anonymous user cannot delete an entry', done => {
+        it( 'Anonymous user cannot delete an entry', done => {
             supertest
                 .delete( '/users/1/entries/1' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#A given user cannot delete an entry of others users', async () => {
+        it( 'A given user cannot delete an entry of others users', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -452,7 +447,7 @@ describe( "#User Entries",  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can delete your own entry', async () => {
+        it( 'A given user can delete your own entry', async () => {
             const user1 = await factory.createUser();
             
             const entry = await factory.createEntry( user1.id );
@@ -469,7 +464,7 @@ describe( "#User Entries",  () => {
                 });
         });
 
-        it( '#Admins can delete users entries', async () => {
+        it( 'Admins can delete users entries', async () => {
             const user1 = await factory.createUser();
             const admin = await factory.createUser( null, 'admin' );
             
