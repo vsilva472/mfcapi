@@ -1,3 +1,5 @@
+'use strict';
+
 const { validationResult }  = require( 'express-validator/check' );
 const repository = require( '../repositories/favorite' );
 

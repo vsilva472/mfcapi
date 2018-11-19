@@ -1,3 +1,5 @@
+'use strict';
+
 const isUserAdmin = ( req ) => {
     return req.role && req.role === 'admin';
 };

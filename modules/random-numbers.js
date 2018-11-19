@@ -1,3 +1,5 @@
+'use strict';
+
 exports.generate = ( max, zero_lead = false) => {
     const digits = Math.floor( Math.random() * Math.floor( max ) ).toString();
     const maxChars = max.toString().length;

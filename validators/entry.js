@@ -1,3 +1,5 @@
+'use strict';
+
 const { check }     = require( 'express-validator/check' );
 const categoryRepository = require( '../repositories/category' );
 const checkCategoriesOwner = async ( values, { req } ) => {
