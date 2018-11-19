@@ -1,28 +1,29 @@
-const express       = require( '../app' );
+'use strict'
+
+const express       = require( '../../app' );
 const supertest     = require( 'supertest' )( express );
 const chai          = require( 'chai' );
 const expect        = chai.expect;
 const assertArrays  = require('chai-arrays');
 chai.use(assertArrays);
 
-const models = require( '../models' );
-const factory = require( './helpers/factory.js' );
+const models  = require( '../../models' );
+
+const factory           = require( '../helpers/factory.js' );
+const databaseHelper    = require( '../helpers/db.js' );
 
 describe( '#USER FAVORITES',  () => {        
-    before( async function () {
-        await models.Favorite.destroy({ where: {} });
-        await models.User.destroy({ where: {} });
-    });
+    before( databaseHelper.clearTables );
 
     describe( '#LIST', () => {
-        it( '#Anonymous users cannot list favorites', done => {
+        it( 'Anonymous users cannot list favorites', done => {
             supertest
                 .get( '/users/10000/favorites' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#A given user cannot list favorites from other users', async () => {
+        it( 'A given user cannot list favorites from other users', async () => {
             const user1      = await factory.createUser();
             const user2      = await factory.createUser();
 
@@ -38,7 +39,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can list your own favorites', async () => {
+        it( 'A given user can list your own favorites', async () => {
             const user1      = await factory.createUser();
 
             const routeForUser1      = `/users/${user1.id}/favorites`;
@@ -57,7 +58,7 @@ describe( '#USER FAVORITES',  () => {
                 });
         });
 
-        it( '#Admins can list favorites of any user', async () => {
+        it( 'Admins can list favorites of any user', async () => {
             const user1      = await factory.createUser();
             const admin      = await factory.createUser( null, 'admin' );
 
@@ -84,7 +85,7 @@ describe( '#USER FAVORITES',  () => {
     });
 
     describe( '#SHOW', () => {
-        it( '#Anonymous users cannot see a favorite details', async () => {
+        it( 'Anonymous users cannot see a favorite details', async () => {
             const route = `/users/1/favorites/1`;
             
             await supertest
@@ -92,7 +93,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 401 );
         });
 
-        it( '#A given user cannot see a favorite of others users', async () => {
+        it( 'A given user cannot see a favorite of others users', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -106,7 +107,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user cannot see a favorite of others users EVEN if :user_id and :favorite_id are correct', async () => {
+        it( 'A given user cannot see a favorite of others users EVEN if :user_id and :favorite_id are correct', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -120,7 +121,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can see your own favorite', async () => {
+        it( 'A given user can see your own favorite', async () => {
             const user1     = await factory.createUser();
             const favorite1 = await factory.createFavorite( user1.id );
            
@@ -138,7 +139,7 @@ describe( '#USER FAVORITES',  () => {
                 });
         });
 
-        it( '#Admins can see favorites of any user', async () => {
+        it( 'Admins can see favorites of any user', async () => {
             const user1     = await factory.createUser();
             const admin     = await factory.createUser(null, 'admin');
             const favorite1 = await factory.createFavorite( user1.id );
@@ -159,7 +160,7 @@ describe( '#USER FAVORITES',  () => {
     });
 
     describe( "#CREATE", () => {
-        it( '#Anonymous users cannot create favorites', async () => {
+        it( 'Anonymous users cannot create favorites', async () => {
             const route = `/users/1/favorites`;
             
             await supertest
@@ -167,7 +168,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 401 );
         });
 
-        it( '#A given user cannot create a favorite with invalid data', async () => {
+        it( 'A given user cannot create a favorite with invalid data', async () => {
             const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
             const token = factory.createTokenForUser( user );
@@ -188,7 +189,7 @@ describe( '#USER FAVORITES',  () => {
                 });
         });
 
-        it ( '#A given user cannot create favorites for others users', async () => {
+        it( 'A given user cannot create favorites for others users', async () => {
             const user1  = await factory.createUser();
             const user2  = await factory.createUser();
 
@@ -202,7 +203,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can create your own favorites', async () => {
+        it( 'A given user can create your own favorites', async () => {
             const user  = await factory.createUser();
             const route = `/users/${user.id}/favorites`;
             const token = factory.createTokenForUser( user );
@@ -219,7 +220,7 @@ describe( '#USER FAVORITES',  () => {
                 });
         });
 
-        it( '#Admins can create favorites for any user', async () => {
+        it( 'Admins can create favorites for any user', async () => {
             const user   = await factory.createUser();
             const admin  = await factory.createUser( null, 'admin' );
 
@@ -240,7 +241,7 @@ describe( '#USER FAVORITES',  () => {
     });
    
     describe( "#UPDATE", () => {
-        it( '#Anonymous users cannot update favorites', done => {
+        it( 'Anonymous users cannot update favorites', done => {
             const route = `/users/1/favorites/1`;
 
             supertest
@@ -249,7 +250,7 @@ describe( '#USER FAVORITES',  () => {
                 .end( done );
         });
 
-        it( '#A given user cannot update a favorite of others users', async () => {
+        it( 'A given user cannot update a favorite of others users', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -264,7 +265,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user cannot update a favorite of others users EVEN if other :user_id and :favorite_id are corrects', async () => {
+        it( 'A given user cannot update a favorite of others users EVEN if other :user_id and :favorite_id are corrects', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -279,7 +280,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 );
         });
 
-        it( '#A given user can update your own favorite', async () => {
+        it( 'A given user can update your own favorite', async () => {
             const user     = await factory.createUser();
             const favorite = await factory.createFavorite( user.id );
             
@@ -301,7 +302,7 @@ describe( '#USER FAVORITES',  () => {
         });
 
 
-        it( '#Admins can update favorites from other users', async () => {
+        it( 'Admins can update favorites from other users', async () => {
             const user     = await factory.createUser();
             const admin    = await factory.createUser( null, 'admin' );
             const favorite = await factory.createFavorite( user.id );
@@ -325,14 +326,14 @@ describe( '#USER FAVORITES',  () => {
     });
 
     describe( '#DELETE', () => {
-        it( '#Anonymous users cannot delete a favorite', done => {
+        it( 'Anonymous users cannot delete a favorite', done => {
             supertest
                 .delete( '/users/1/favorites/1' )
                 .expect( 401 )
                 .end( done );
         });
 
-        it( '#A given user cannot delete favorites of others users', async () => {
+        it( 'A given user cannot delete favorites of others users', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -346,7 +347,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 ); 
         });
 
-        it( '#A given user cannot update favorites of others users EVEN if :user_id and :favorite_id are corrects', async () => {
+        it( 'A given user cannot update favorites of others users EVEN if :user_id and :favorite_id are corrects', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -360,7 +361,7 @@ describe( '#USER FAVORITES',  () => {
                 .expect( 403 ); 
         });
 
-        it( '#A given user can delete your own favorites', async () => {
+        it( 'A given user can delete your own favorites', async () => {
             const user      = await factory.createUser(); 
             const favorite  = await factory.createFavorite( user.id );
             
@@ -371,13 +372,13 @@ describe( '#USER FAVORITES',  () => {
                 .delete( route )
                 .set( 'Authorization', `Bearer ${token}` )
                 .expect( async res => {
-                    deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+                    const deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
                     expect( res.status ).to.be.equal( 200 );
                     expect( deletedFavorite ).to.be.equal( null );
                 });
         });
 
-        it( '#Admins can delete favorites from any user', async () => {
+        it( 'Admins can delete favorites from any user', async () => {
             const user      = await factory.createUser(); 
             const admin     = await factory.createUser( null, 'admin' ); 
             const favorite  = await factory.createFavorite( user.id );
@@ -389,7 +390,7 @@ describe( '#USER FAVORITES',  () => {
                 .delete( route )
                 .set( 'Authorization', `Bearer ${token}` )
                 .expect( async res => {
-                    deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+                    const deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
                     expect( res.status ).to.be.equal( 200 );
                     expect( deletedFavorite ).to.be.equal( null );
                 });

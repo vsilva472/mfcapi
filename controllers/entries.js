@@ -3,7 +3,10 @@
 const { validationResult }  = require( 'express-validator/check' );
 
 const repository            = require( '../repositories/entry' );
-const categoryRepository    = require( '../repositories/category' ); 
+
+const onlyUnique  = ( arr ) => {
+    return arr.filter((v,i,a)=>a.indexOf(v)==i);
+};
 
 exports.index = async ( req, res, next ) => {
     try {      
@@ -64,8 +67,9 @@ exports.create = async ( req, res, next ) => {
             return res.status( 422 ).json({ errors: errors.array() });
     
         if ( categories ) {
+            const unique_categories = onlyUnique( categories );
             const entry = await repository.create( { label, value, type, UserId, registeredAt } );      
-            await entry.setCategories( categories );
+            await entry.setCategories( unique_categories );
             
             return res.status(201).json({ message: 'Registro adicionado com sucesso 1', data: entry });
         }
@@ -86,7 +90,7 @@ exports.update = async ( req, res, next ) => {
         const role      = req.role;
         const UserId    = parseInt(req.params.user_id, 10);
 
-        const { label, value, type, registeredAt } = req.body;
+        const { label, value, type, registeredAt, categories } = req.body;
         const data = {};
         
         if ( ! errors.isEmpty() ) 
@@ -104,8 +108,14 @@ exports.update = async ( req, res, next ) => {
         if ( value ) data.value = value;
         if ( type ) data.type = type;
         if ( registeredAt ) data.registeredAt = registeredAt;
-        
+
         await repository.update( data, { where: { id, UserId } } );    
+
+        if ( categories ) {
+            const unique_categories = onlyUnique( categories );
+            await resource.setCategories( unique_categories );
+        }
+    
         return res.status(200).json({ message: "Entrada atualizada com sucesso" });
     }
     catch ( e ) {

@@ -36,12 +36,13 @@ module.exports = (sequelize, DataTypes) => {
     // associations can be defined here
     Entry.belongsTo(models.User, {
       foreignKey: 'UserId',
-      onDelete: 'CASCADE'
+      onDelete: 'RESTRICT'
     });
 
     Entry.belongsToMany(models.Category, {
       through: 'EntryCategories',
-      foreignKey: 'EntryId'
+      foreignKey: 'EntryId',
+      onDelete: 'RESTRICT'
     });
   };
   return Entry;

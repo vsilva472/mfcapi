@@ -98,6 +98,9 @@ exports.destroy = async ( req, res, next ) => {
         return res.status(200).json({ message: "Categoria removida com sucesso." });
     }
     catch ( e ) {
+        if ( e && e.name && e.name == 'SequelizeForeignKeyConstraintError' ) {
+            return res.status( 409 ).json({ message: 'É necessário remover esta categoria de todas as Entradas antes de poder apagá-la.' });    
+        }
         return res.status( 500 ).json({ message: 'Erro ao remover categoria', error: e });
     }
 }

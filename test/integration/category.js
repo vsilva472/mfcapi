@@ -1,24 +1,20 @@
-const express       = require( '../app' );
+'use strict'
+
+const express       = require( '../../app' );
 const supertest     = require( 'supertest' )( express );
 const chai          = require( 'chai' );
 const expect        = chai.expect;
 const assertArrays  = require('chai-arrays');
 chai.use(assertArrays);
 
-const models = require( '../models' );
-const factory = require( './helpers/factory.js' );
+const models = require( '../../models' );
+
+const factory           = require( '../helpers/factory.js' );
+const databaseHelper    = require( '../helpers/db.js' );
 
 describe( "#USER CATEGORIES",  () => { 
-    before( async function () {
-        await models.Category.destroy({ where: {} });
-        await models.User.destroy({ where: {} });
-    });
-
-    after( async function () {
-        await models.Category.destroy({ where: {} });
-        await models.User.destroy({ where: {} });
-    });
-
+    before( databaseHelper.clearTables );
+    
     describe( "#LIST", () => {
         it( 'Anonymous users cannot list categories', async () => {
             await supertest
@@ -264,7 +260,7 @@ describe( "#USER CATEGORIES",  () => {
     });
 
     describe( "#UPDATE", () => {
-        it( '#Anonymous users cannot update a category', async () => {
+        it( 'Anonymous users cannot update a category', async () => {
             const route = `/users/1/categories/1`;
 
             await supertest
@@ -273,7 +269,7 @@ describe( "#USER CATEGORIES",  () => {
                 .expect( 'Content-Type', /json/ );
         });
 
-        it( '#A given user cannot update a category of other user', async () => {
+        it( 'A given user cannot update a category of other user', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -290,7 +286,7 @@ describe( "#USER CATEGORIES",  () => {
                 .expect( 'Content-Type', /json/ );
         });
 
-        it( '#A given user cannot update a category of other user even if :user_id and :category_id are ok', async () => {
+        it( 'A given user cannot update a category of other user even if :user_id and :category_id are ok', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
 
@@ -307,7 +303,7 @@ describe( "#USER CATEGORIES",  () => {
                 .expect( 'Content-Type', /json/ );
         });
 
-        it( '#A given user can update your own category', async () => {
+        it( 'A given user can update your own category', async () => {
             const user     = await factory.createUser();
             const category = await factory.createCategory( user.id );
             
@@ -330,7 +326,7 @@ describe( "#USER CATEGORIES",  () => {
                 });
         });
 
-        it( '#Admins can update categories of any user', async () => {
+        it( 'Admins can update categories of any user', async () => {
             const user     = await factory.createUser();
             const admin    = await factory.createUser( null, 'admin' );
             
@@ -357,14 +353,14 @@ describe( "#USER CATEGORIES",  () => {
     });
 
     describe( '#DELETE', () => {
-        it( '#Anonymous users cannot delete a category', async () => {
+        it( 'Anonymous users cannot delete a category', async () => {
             await supertest
                 .delete( '/users/1/categories/1' )
                 .expect( 401 )
                 .expect( 'Content-Type', /json/ );
         });
 
-        it( '#A given user cannot delete categories of other user', async () => {
+        it( 'A given user cannot delete categories of other user', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -380,7 +376,7 @@ describe( "#USER CATEGORIES",  () => {
                 .expect( 'Content-Type', /json/ );
         });
 
-        it( '#A given user cannot delete categories of other user even if :user_id and :category_id are ok', async () => {
+        it( 'A given user cannot delete categories of other user even if :user_id and :category_id are ok', async () => {
             const user1 = await factory.createUser();
             const user2 = await factory.createUser();
             
@@ -396,7 +392,25 @@ describe( "#USER CATEGORIES",  () => {
                 .expect( 'Content-Type', /json/ );
         });
 
-        it( '#A given user can delete your own category', async () => {
+        it( 'A given user cannot remove a category if it has an entry associated', async () => {
+            const user = await factory.createUser();
+            
+            const category   = await factory.createCategory( user.id );
+            const entry      = await factory.createEntry( user.id );
+            
+            const token      = factory.createTokenForUser( user );
+            const route      = `/users/${user.id}/categories/${category.id}`;
+
+            await entry.setCategories([ category.id ]);
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${token}` )
+                .expect( 409 )
+                expect( 'Content-Type', /json/ );
+        });
+
+        it( 'A given user can delete your own category', async () => {
             const user1 = await factory.createUser();
             
             const category          = await factory.createCategory( user1.id );
@@ -408,7 +422,7 @@ describe( "#USER CATEGORIES",  () => {
                 .delete( route )
                 .set( 'Authorization', `Bearer ${tokenForUser1}` )
                 .expect( async res => {
-                    deletedCategory = await models.Category.findOne({ where: { id: category.id } });
+                    const deletedCategory = await models.Category.findOne({ where: { id: category.id } });
                     
                     expect( res.status ).to.be.equal( 200 );
                     expect( res.type ).to.be.equal( 'application/json' );
@@ -416,7 +430,7 @@ describe( "#USER CATEGORIES",  () => {
                 });
         });
 
-        it( '#Admins can delete category of any user', async () => {
+        it( 'Admins can delete category of any user', async () => {
             const user      = await factory.createUser(); 
             const admin     = await factory.createUser( null, 'admin' ); 
             const category  = await factory.createCategory( user.id );
@@ -428,7 +442,7 @@ describe( "#USER CATEGORIES",  () => {
                 .delete( route )
                 .set( 'Authorization', `Bearer ${token}` )
                 .expect( async res => {
-                    deletedCategory = await models.Category.findOne({ where: { id: category.id } });
+                    const deletedCategory = await models.Category.findOne({ where: { id: category.id } });
                     
                     expect( res.status ).to.be.equal( 200 );
                     expect( res.type ).to.be.equal( 'application/json' );

@@ -32,7 +32,8 @@ MFCApi is a api to be consumed by My Financial Control Frontend
     "pass": "my password here"
 }
 ```
-
+### Run migrations
+Run migrations with command `$ node_modules\.bin\sequelize db:migrate --env=XXXX` where XXXX must be your environment [development, production, test]
 
 ### License
 MIT

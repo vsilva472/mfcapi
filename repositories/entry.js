@@ -1,3 +1,5 @@
+'use strict';
+
 const Entry     = require( '../models' ).Entry;
 const Category  = require( '../models' ).Category;
 
@@ -35,5 +37,7 @@ exports.update = async ( params, where ) => {
 };
 
 exports.destroy = async ( where ) => {
+    const entry = await Entry.findOne( where );
+    await entry.setCategories([]);
     await Entry.destroy( where );
 };
