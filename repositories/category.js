@@ -1,3 +1,5 @@
+'use strict';
+
 const Category  = require( '../models' ).Category;
 
 exports.allByUserId = async ( user_id ) => {

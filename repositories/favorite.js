@@ -1,3 +1,5 @@
+'use strict';
+
 const Favorite  = require( '../models' ).Favorite;
 
 exports.allByUserId = async ( user_id ) => {
