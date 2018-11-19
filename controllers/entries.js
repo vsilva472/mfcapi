@@ -4,6 +4,10 @@ const { validationResult }  = require( 'express-validator/check' );
 
 const repository            = require( '../repositories/entry' );
 
+const onlyUnique  = ( arr ) => {
+    return arr.filter((v,i,a)=>a.indexOf(v)==i);
+};
+
 exports.index = async ( req, res, next ) => {
     try {      
         const start = new Date();
@@ -63,8 +67,9 @@ exports.create = async ( req, res, next ) => {
             return res.status( 422 ).json({ errors: errors.array() });
     
         if ( categories ) {
+            const unique_categories = onlyUnique( categories );
             const entry = await repository.create( { label, value, type, UserId, registeredAt } );      
-            await entry.setCategories( categories );
+            await entry.setCategories( unique_categories );
             
             return res.status(201).json({ message: 'Registro adicionado com sucesso 1', data: entry });
         }
@@ -106,7 +111,10 @@ exports.update = async ( req, res, next ) => {
 
         await repository.update( data, { where: { id, UserId } } );    
 
-        if ( categories ) await resource.setCategories( categories );
+        if ( categories ) {
+            const unique_categories = onlyUnique( categories );
+            await resource.setCategories( unique_categories );
+        }
     
         return res.status(200).json({ message: "Entrada atualizada com sucesso" });
     }

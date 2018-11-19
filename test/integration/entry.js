@@ -408,7 +408,7 @@ describe( "#User Entries",  () => {
                 .expect( 200 );
         });
 
-        it( 'A give user cannot update an entry with categories of other user', async () => {
+        it( 'A given user cannot update an entry with categories of other user', async () => {
             const user1     = await factory.createUser();
             const user2     = await factory.createUser();
             
@@ -434,7 +434,7 @@ describe( "#User Entries",  () => {
                 .expect( 'Content-Type', /json/ );
         }); 
 
-        it( 'A give user can update an entry with your own categories', async () => {
+        it( 'A given user can update an entry with your own categories', async () => {
             const user1     = await factory.createUser();
            
             const entry    = await factory.createEntry( user1.id );
