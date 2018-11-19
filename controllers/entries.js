@@ -3,7 +3,6 @@
 const { validationResult }  = require( 'express-validator/check' );
 
 const repository            = require( '../repositories/entry' );
-const categoryRepository    = require( '../repositories/category' ); 
 
 exports.index = async ( req, res, next ) => {
     try {      
@@ -86,7 +85,7 @@ exports.update = async ( req, res, next ) => {
         const role      = req.role;
         const UserId    = parseInt(req.params.user_id, 10);
 
-        const { label, value, type, registeredAt } = req.body;
+        const { label, value, type, registeredAt, categories } = req.body;
         const data = {};
         
         if ( ! errors.isEmpty() ) 
@@ -104,8 +103,11 @@ exports.update = async ( req, res, next ) => {
         if ( value ) data.value = value;
         if ( type ) data.type = type;
         if ( registeredAt ) data.registeredAt = registeredAt;
-        
+
         await repository.update( data, { where: { id, UserId } } );    
+
+        if ( categories ) await resource.setCategories( categories );
+    
         return res.status(200).json({ message: "Entrada atualizada com sucesso" });
     }
     catch ( e ) {

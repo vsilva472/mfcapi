@@ -1,5 +1,19 @@
 const { check }     = require( 'express-validator/check' );
 const categoryRepository = require( '../repositories/category' );
+const checkCategoriesOwner = async ( values, { req } ) => {
+    const categories = await Promise.all( values.map( async id => {
+        let category = await categoryRepository.findOne( { id } );
+        if ( ! category ) return 0;
+
+        return category.UserId;
+    } ) );
+
+    const otherUserCategories = categories.filter( cat => {
+        return cat != req.params.user_id;
+    });
+
+    return ! otherUserCategories.length;
+};
 
 exports.create = [
     check( 'label' )
@@ -33,20 +47,8 @@ exports.create = [
         })
         .withMessage( 'Algumas categorias enviadas são inválidas.' )
 
-        .custom( async ( values, { req } ) => {
-            const categories = await Promise.all( values.map( async id => {
-                let category = await categoryRepository.findOne( { id } );
-                if ( ! category ) return 0;
-
-                return category.UserId;
-            } ) );
-
-            const otherUserCategories = categories.filter( cat => {
-                return cat != req.params.user_id;
-            });
-
-            return ! otherUserCategories.length;
-        }).withMessage('Você não pode associar a uma entrada uma categoria de outro usuário.')
+        .custom( checkCategoriesOwner )
+        .withMessage('Você não pode associar a uma entrada uma categoria de outro usuário.')
 ];
 
 exports.update = [
@@ -67,4 +69,21 @@ exports.update = [
             return ! isNaN(Date.parse( value ));
         })
         .withMessage( 'Data inválida.' ),
+    
+    check( 'categories' )
+        .optional()
+        
+        .isArray()
+        .withMessage( 'Categoria(s) inválida(s).' )
+        
+        .custom( values => {
+            return values.every( element => {
+                return !isNaN( element );
+            });
+        })
+        .withMessage( 'Algumas categorias enviadas são inválidas.' )
+
+        .custom( checkCategoriesOwner )
+        .withMessage('Você não pode associar a uma entrada uma categoria de outro usuário.')
+        
 ];

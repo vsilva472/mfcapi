@@ -408,6 +408,65 @@ describe( "#User Entries",  () => {
                 .expect( 200 );
         });
 
+        it( 'A give user cannot update an entry with categories of other user', async () => {
+            const user1     = await factory.createUser();
+            const user2     = await factory.createUser();
+            
+            const entryForUser1    = await factory.createEntry( user1.id );
+
+            const categoryForUser1 = await factory.createCategory( user1.id );
+            const categoryForUser2 = await factory.createCategory( user2.id );
+
+            const routeForUser1    = `/users/${user1.id}/entries/${entryForUser1.id}`;
+            const tokenForUser1    = factory.createTokenForUser( user1 );
+
+            await supertest
+                .put( routeForUser1 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .send({ 
+                    label: 'Updated Label', 
+                    type: 1, 
+                    value: 7.77, 
+                    registeredAt: new Date(), 
+                    categories: [ categoryForUser2.id ] 
+                })
+                .expect( 422 )
+                .expect( 'Content-Type', /json/ );
+        }); 
+
+        it( 'A give user can update an entry with your own categories', async () => {
+            const user1     = await factory.createUser();
+           
+            const entry    = await factory.createEntry( user1.id );
+
+            const category1 = await factory.createCategory( user1.id );
+            const category2 = await factory.createCategory( user1.id );
+
+            await entry.setCategories( [ category1.id ] );
+
+            const routeForUser1    = `/users/${user1.id}/entries/${entry.id}`;
+            const tokenForUser1    = factory.createTokenForUser( user1 );
+
+            await supertest
+                .put( routeForUser1 )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .send({ 
+                    label: 'Updated Label', 
+                    type: 1, 
+                    value: 7.77, 
+                    registeredAt: new Date(), 
+                    categories: [ category2.id ] 
+                })
+                .expect( async res => {
+                    const updatedEntry = await models.Entry.findOne({ where: { id: entry.id }, include: [{ model:  models.Category }] })
+                    
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( res.type ).to.be.equal( 'application/json' );
+                    expect( updatedEntry.Categories ).to.have.lengthOf( 1 );
+                    expect( updatedEntry.Categories[0].id ).to.be.equal( category2.id );
+                });
+        }); 
+
         it( "Admins can update entries for any user", async () => {
             const user1     = await factory.createUser();
             const admin     = await factory.createUser( null, 'admin' );
@@ -461,6 +520,32 @@ describe( "#User Entries",  () => {
                     const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
                     expect( res.status ).to.be.equal( 200 );
                     expect( deletedEntry ).to.be.equal( null );
+                });
+        });
+
+        it( 'A given user can delete your own entry and mantain your categories', async () => {
+            const user1 = await factory.createUser();          
+            const entry = await factory.createEntry( user1.id );
+            const category = await factory.createCategory( user1.id );
+
+            await entry.setCategories([ category.id ]);
+
+            const route = `/users/${user1.id}/entries/${entry.id}`;
+            const tokenForUser1 = factory.createTokenForUser( user1 );
+
+            await supertest
+                .delete( route )
+                .set( 'Authorization', `Bearer ${tokenForUser1}` )
+                .expect( async res => {
+                    const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
+                    const cat   = await models.Category.findOne({ where: { id: category.id }, include: [{ model: models.Entry }] });
+
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( deletedEntry ).to.be.equal( null );
+                    expect( cat ).to.not.be.equal( null );
+                    expect( cat.id ).to.be.equal( category.id );
+                    expect( cat.UserId ).to.be.equal( category.UserId );
+                    expect( cat.Entries ).to.have.lengthOf( 0 );
                 });
         });
 
