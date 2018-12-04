@@ -1,5 +1,7 @@
 sudo: true
 dist: xenial
+services:
+  - mysql
 language: node_js
 node_js:
   - "8"
