@@ -1,7 +1,7 @@
 'use strict';
 
 const jwt           = require( 'jsonwebtoken' );
-const { secret }    = require( '../config/jwt' ); 
+const { secret }    = require( '../config/jwt' )[ process.env.NODE_ENV || 'development' ];
 
 module.exports = ( req, res, next ) => {
     const authHeader = req.headers.authorization;

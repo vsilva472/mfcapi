@@ -3,7 +3,7 @@
 const models = require( '../../models' );
 
 const jwt           = require( 'jsonwebtoken' );
-const jwtConfig     = require( '../../config/jwt' );
+const jwtConfig     = require( '../../config/jwt' )[ process.env.NODE_ENV || 'development' ];
 
 const randomDigits  = require( '../../modules/random-numbers' ); 
 

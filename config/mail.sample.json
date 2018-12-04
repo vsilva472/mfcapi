@@ -1,7 +1,0 @@
-{
-    "host": "smtp.domain.com",
-    "port": "2525",
-    "from": "hello@foo.bar",
-    "user": "user@foo.bar",
-    "pass": "my password here"
-}

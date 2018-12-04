@@ -3,9 +3,11 @@
   "version": "0.0.2",
   "private": true,
   "scripts": {
-    "start": "set NODE_ENV=production&& node ./bin/www",
-    "test": "set NODE_ENV=test&& node node_modules\\mocha\\bin\\mocha --timeout=100000",
-    "start:dev": "set NODE_ENV=development&& set DEBUG=mfcapi:server&& node ./bin/www"
+    "start": "NODE_ENV=production&& node ./bin/www",
+    "test-unit": "node node_modules\\mocha\\bin\\mocha test/unit/**.js --timeout=100000",
+    "test-integration": "node node_modules\\mocha\\bin\\mocha test/unit/**.js --timeout=100000",
+    "test": "NODE_ENV=test&& npm run test-integration&& npm run test-unit",
+    "start:dev": "NODE_ENV=development&& DEBUG=mfcapi:server&& node ./bin/www"
   },
   "dependencies": {
     "bcrypt": "^3.0.2",
