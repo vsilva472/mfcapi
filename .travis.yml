@@ -6,8 +6,8 @@ language: node_js
 node_js:
   - "8"
 before_install:
-  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('abc123') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;"
-  - sudo mysql_upgrade -u root -p abc123
+  - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('mfcapi') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;"
+  - sudo mysql_upgrade -u root -pmfcapi
   - sudo service mysql restart
   - mysql -e 'CREATE DATABASE IF NOT EXISTS mfcapi_test;'
 install:
