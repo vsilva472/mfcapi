@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "start": "NODE_ENV=production&& node ./bin/www",
-    "test-unit": "node node_modules\\mocha\\bin\\mocha test/unit/**.js --timeout=100000",
-    "test-integration": "node node_modules\\mocha\\bin\\mocha test/unit/**.js --timeout=100000",
+    "test-unit": "node node_modules/mocha/bin/mocha test/unit/**.js --timeout=100000",
+    "test-integration": "node node_modules/mocha/bin/mocha test/unit/**.js --timeout=100000",
     "test": "npm run test-integration&& npm run test-unit",
     "start:dev": "NODE_ENV=development&& DEBUG=mfcapi:server&& node ./bin/www"
   },
