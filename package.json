@@ -6,7 +6,7 @@
     "start": "NODE_ENV=production&& node ./bin/www",
     "migrate": "node_modules/.bin/sequelize db:migrate",
     "test-unit": "node node_modules/mocha/bin/mocha test/unit/**.js --timeout=100000 --exit",
-    "test-integration": "node node_modules/mocha/bin/mocha test/unit/**.js --timeout=100000 --exit",
+    "test-integration": "node node_modules/mocha/bin/mocha test/integration/**.js --timeout=100000 --exit",
     "test": "npm run migrate&& npm run test-integration&& npm run test-unit",
     "start:dev": "NODE_ENV=development&& DEBUG=mfcapi:server&& node ./bin/www"
   },
