@@ -10,7 +10,6 @@ before_install:
 install:
   - npm install
 before_script:
-  - node_modules/.bin/sequelize db:migrate:undo:all
   - node_modules/.bin/sequelize db:migrate
 notifications:
   email:
