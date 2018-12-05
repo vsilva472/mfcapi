@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/vsilva472/mfcapi.svg?branch=master)](https://travis-ci.org/vsilva472/mfcapi)
+
 # My Financial Control API (MFC)
 MFCApi is a api to be consumed by My Financial Control Frontend
 
