@@ -6,6 +6,7 @@ const jwt                   = require( 'jsonwebtoken' );
 const randomDigits          = require( '../modules/random-numbers' );
 const repository            = require( '../repositories/user' );
 const jwtConfig             = require( '../config/jwt' )[ process.env.NODE_ENV || 'development' ];
+const mailer                = require( '../modules/mailer' );
 
 exports.Signup = async ( req, res, next ) => {
     try {
@@ -14,14 +15,18 @@ exports.Signup = async ( req, res, next ) => {
         if ( ! errors.isEmpty() ) 
             return res.status(422).json({ errors: errors.array() });
 
-        await repository.create({ 
+        const user = await repository.create({ 
             name: req.body.name, 
             email: req.body.email, 
             password: req.body.password 
         });
 
-        // Todo send welcome email
-        res.status( 201 ).json( { message: "Cadastro realizado com sucesso" } )
+        mailer.send( user.email, 'Bem-vindo(a)!', 'welcome', {
+            email: user.email,
+            name: user.name
+        }, ( error, info ) => {});
+
+        res.status( 201 ).json( { message: "Cadastro realizado com sucesso" } );
     }
     catch ( err ) {
         res.status( 500 ).json({ message: "Erro ao cadastrar usuário", err });
@@ -78,12 +83,21 @@ exports.PasswordRecover = async ( req, res, next ) => {
 
         await repository.update( user, { password_reset_token: token, password_reset_expires: now });
 
-        // TODO send password email
-        return onSuccess();
+        mailer.send( user.email, 'Recuperar Senha', 'password-recover', {
+            email: user.email,
+            name: user.name,
+            token: token
+        }, ( error, info ) => {
+            if ( error ) {
+                return res.status( 500 ).json({ message: 'Não foi possível enviar o email de recuperação de senha.' });
+            }
+            onSuccess();
+        });
     }
     catch ( e ) {
+        console.log( e );
         res.status( 500 ).json({ 
-            message: 'Ocorreu um no processo de recuperação de senha.', 
+            message: 'Ocorreu um erro no processo de recuperação de senha. Por favor tente novamente mais tarde', 
             error: e
         });
     }
