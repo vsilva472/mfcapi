@@ -10,32 +10,59 @@ MFCApi is a api to be consumed by My Financial Control Frontend
 - In a terminal navigate to repository folder `$ cd <PATH TO REPOSITORY>/mfcapi`
 - Run installer command `$ npm install`
 
-### Configure Database
-- Copy and rename config/config.sample.json to config.json
-- Fill config/config.json with your database credentials
+### Env Vars
+This use envs to controle sensive data of application and this envs area used inside each file from `/config` folder
 
-### Configure JWT
-- Copy and rename config/jwt.sample.json to jwt.json
-- Fill config/jwt.json with your 
-```
-{
-    "secret": "my secret hash here", // hash salt to generate token
-    "ttl": 3600  // token time to expire in seconds
-}
-```
+| Env Prefix | Description |
+| --- | --- |
+| DEV_ | env vars that are used in DEVELOPMENT environment |
+| CI_ | env vars that are used in TEST environment (including travis) |
+| PROD_ | env vars that are used in PRODUCTION environment |
 
-### Configure Mail Options
-- Copy and rename config/mail.sample.json to mail.json
-- Fill config/mail.json with your 
-```
-{
-    "host": "smtp.domain.com",
-    "port": "2525",
-    "from": "hello@foo.bar",
-    "user": "user@foo.bar",
-    "pass": "my password here"
-}
-```
+### Database Envs
+- Open file `config/config.js` to see more details about database credentials.
+
+| Option | Description |
+| --- | --- |
+| username | Database username |
+| password | Database password |
+| databse | Database name |
+| host | Database host ex: localhost or 127.0.0.1 |
+| dialect | Database dialect ex: 'mysql' |
+| logging | Enable disable log queries in console |
+
+
+### JWT Envs
+- Open file `config/jwt.js` to see more details about JWT options.
+
+| Option | Description |
+| --- | --- |
+| secret | Hash for JWT token generation |
+| ttl | JWT Token time to live in miliseconds |
+
+
+### Mail Envs
+Open file `config/mail.js` to see more details about mail options.
+
+| Option | Description |
+| --- | --- |
+| host | SMTP Host ex: smtp.host.com |
+| port | SMTP Port usualy 465 |
+| from | Default mail from ex: me@mydomain.com |
+| user | Mail Account username |
+| pass | Mail Account password |
+
+### Frontents Envs
+Open file `config/fronted.js` to see more details about frontend options.
+This options are used inside `modules/mailer.js`.
+
+| Option | Description |
+| --- | --- |
+| frontend_url | SPA url |
+| frontend_imgs | Url pointing to email images folder |
+| frontend_password | SPA password recover url |
+
+
 ### Run migrations
 Run migrations with command `$ node_modules\.bin\sequelize db:migrate --env=XXXX` where XXXX must be your environment [development, production, test]
 
