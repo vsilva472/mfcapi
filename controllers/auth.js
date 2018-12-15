@@ -128,6 +128,8 @@ exports.PasswordReset = async ( req, res, next ) => {
         if ( now > user.password_reset_expires )
             return res.status( 400 ).json({ message: 'Seu token expirou. Por favor refaça o processo para recuperar senha.' });
 
+        await repository.removeRefreshTokens( user.id );
+
         await repository.update( user, { 
             password: password,
             password_reset_token: null, 

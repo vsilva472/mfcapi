@@ -28,7 +28,10 @@ const factory = {
     },
     createRandomDigits: ( max, zero_lead = false ) => {
         return randomDigits.generate( max, zero_lead );
-    } 
+    },
+    createRefreshTokenForUser: async ( user ) => {
+        return await models.Token.create({ UserId: user.id, sessid: randomDigits.generate( 9999999, true ), expiresAt: new Date() });
+    }
 };
 
 module.exports = factory;

@@ -30,3 +30,7 @@ exports.findRefreshToken = async ( params ) => {
     const token = await Token.findOne({ where: params });
     return token;
 };
+
+exports.removeRefreshTokens = async ( UserId ) => {
+    await Token.destroy( { where: { UserId } } );
+};

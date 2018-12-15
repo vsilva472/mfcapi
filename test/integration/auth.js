@@ -6,7 +6,6 @@ const chai          = require( 'chai' );
 const expect       = chai.expect;
 const assertArrays = require('chai-arrays');
 const jwt = require( 'jsonwebtoken' );
-const randomDigits = require( '../../modules/random-numbers' );
 
 chai.use(assertArrays);
 
@@ -281,7 +280,7 @@ describe( '#AUTH', () => {
 
         it( 'A given user can refresh token', async () => {
             const user = await factory.createUser();
-            const sessid = randomDigits.generate( 9999999, true );
+            const sessid = factory.createRandomDigits( 9999999, true );
             const expiredToken = jwt.sign({ id: user.id, role: user.role, sessid}, secret, { expiresIn: -1 } );
             const refresh_token = jwt.sign({ id: user.id, role:user.role, sessid}, refreshSecret, { expiresIn: refreshTTL } );
             const payload = jwt.decode( refresh_token );
