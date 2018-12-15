@@ -2,6 +2,7 @@
 
 const { validationResult }  = require( 'express-validator/check' );
 const jwt                   = require( 'jsonwebtoken' );
+const crypto                = require( 'crypto' );
 
 const randomDigits          = require( '../modules/random-numbers' );
 const repository            = require( '../repositories/user' );
@@ -46,13 +47,17 @@ exports.Signin = async ( req, res, next ) => {
         if ( ! user || ! await user.comparePassword( password ) ) 
             return res.status( 401 ).json( { message: 'Email e/ou Senha inválidos.' } );
         
-        const token = jwt.sign({ id: user.id, role: user.role}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        const sessid = randomDigits.generate( 9999999, true );
+        const token = jwt.sign({ id: user.id, role: user.role, sessid}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        const refresh_token = crypto.randomBytes(32).toString( 'hex' );
+
+        await repository.saveSessid( user.id, sessid );
         
         res.status( 200 ).json({ user: {
             id: user.id,
             name: user.name,
-            email: user.email
-        }, token });
+            email: user.email,
+        }, token, refresh_token });
     }
     catch ( e ) {
         res.status( 500 ).send( { message: e } );

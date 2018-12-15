@@ -16,7 +16,7 @@ module.exports = {
           key: 'id'
         }
       },
-      auth_id: {
+      sessid: {
         type: Sequelize.STRING(32),
         allowNull: false,
       },
