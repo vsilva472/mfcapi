@@ -20,7 +20,7 @@ This use envs to controle sensive data of application and this envs area used in
 | PROD_ | env vars that are used in PRODUCTION environment |
 
 ### Database Envs
-- Open file `config/config.js` to see more details about database credentials.
+Open file `config/config.js` to see more details about database credentials.
 
 | Option | Description |
 | --- | --- |
@@ -33,12 +33,16 @@ This use envs to controle sensive data of application and this envs area used in
 
 
 ### JWT Envs
-- Open file `config/jwt.js` to see more details about JWT options.
+Open file `config/jwt.js` to see more details about JWT options.
 
 | Option | Description |
 | --- | --- |
 | secret | Hash for JWT token generation |
 | ttl | JWT Token time to live in miliseconds |
+| refreshSecret | Hash for JWT Refresh Token Generation |
+| refreshTTL | Refresh Token Expiration |
+
+**Note**: tokens expiration time usually are configured as string. Ex: `1m = 1 minute`, `1h = 1 hour`
 
 
 ### Mail Envs
@@ -65,6 +69,8 @@ This options are used inside `modules/mailer.js`.
 
 ### Run migrations
 Run migrations with command `$ node_modules\.bin\sequelize db:migrate --env=XXXX` where XXXX must be your environment [development, production, test]
+
+**Note** To migration work you should setup env vars with base on environment you want to build.
 
 ### License
 MIT
