@@ -8,8 +8,10 @@ const jwtConfig     = require( '../../config/jwt' )[ process.env.NODE_ENV || 'de
 const randomDigits  = require( '../../modules/random-numbers' ); 
 
 const factory = {
-    createTokenForUser: ( user ) => {
-        return jwt.sign({ id: user.id, role: user.role }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+    createTokenForUser: ( user, salt, expiration ) => {
+        const ttl = expiration || jwtConfig.ttl;
+        const secret = salt || jwtConfig.secret
+        return jwt.sign({ id: user.id, role: user.role }, secret, { expiresIn: ttl } );
     },
     createUser: async ( email = null, role = 'user', name = 'my name', password = '123456' ) => {
         if ( ! email ) email = `u_${new Date().getTime()}@gmail.com`;

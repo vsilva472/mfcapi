@@ -2,7 +2,6 @@
 
 const { validationResult }  = require( 'express-validator/check' );
 const jwt                   = require( 'jsonwebtoken' );
-const crypto                = require( 'crypto' );
 
 const randomDigits          = require( '../modules/random-numbers' );
 const repository            = require( '../repositories/user' );
@@ -49,9 +48,10 @@ exports.Signin = async ( req, res, next ) => {
         
         const sessid = randomDigits.generate( 9999999, true );
         const token = jwt.sign({ id: user.id, role: user.role, sessid}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
-        const refresh_token = crypto.randomBytes(32).toString( 'hex' );
+        const refresh_token = jwt.sign({ id: user.id, role:user.role, sessid}, jwtConfig.refreshSecret, { expiresIn: jwtConfig.refreshTTL } );
+        const payload = jwt.decode( refresh_token );
 
-        await repository.saveSessid( user.id, sessid );
+        await repository.saveSessid( user.id, sessid, payload.exp * 1000);
         
         res.status( 200 ).json({ user: {
             id: user.id,
@@ -100,7 +100,6 @@ exports.PasswordRecover = async ( req, res, next ) => {
         });
     }
     catch ( e ) {
-        console.log( e );
         res.status( 500 ).json({ 
             message: 'Ocorreu um erro no processo de recuperação de senha. Por favor tente novamente mais tarde', 
             error: e
@@ -140,5 +139,22 @@ exports.PasswordReset = async ( req, res, next ) => {
     }
     catch ( e ) {
         res.status( 500 ).json( { message: 'Erro ao reinicializar a senha', error: e } );
+    }
+};
+
+exports.RefreshToken = async ( req, res, next ) => {
+    try {
+        const { id, role, sessid } = req;
+        const refreshTokenFromDd = await repository.findRefreshToken({ UserId: id, sessid });
+
+        if ( ! refreshTokenFromDd || refreshTokenFromDd.sessid != sessid ) {
+            return res.status( 401 ).json({ message: "The give refresh token is not allowed", code: 159 });
+        }
+
+        const token = jwt.sign({ id, role: role, sessid}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        res.status( 200 ).json( { token } );
+    }
+    catch ( err ) { 
+        res.status( 500 ).json( { message: "Error while try to refresh token" } );
     }
 };

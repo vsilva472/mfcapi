@@ -5,11 +5,15 @@ const supertest     = require( 'supertest' )( express );
 const chai          = require( 'chai' );
 const expect       = chai.expect;
 const assertArrays = require('chai-arrays');
+const jwt = require( 'jsonwebtoken' );
+const randomDigits = require( '../../modules/random-numbers' );
+
 chai.use(assertArrays);
 
 const models    = require( '../../models' );
 const factory   = require( '../helpers/factory.js' );
 const databaseHelper   = require( '../helpers/db.js' );
+const { secret, ttl, refreshSecret, refreshTTL }  = require( '../../config/jwt' )[ process.env.NODE_ENV || 'development' ];
 
 const routes = {
     signin: '/auth/signin',
@@ -19,6 +23,9 @@ const routes = {
         reset: ( token = '' )  => {
             return `/auth/password/reset/${token}`;
         }
+    },
+    token: {
+        refresh: '/auth/token/refresh'
     }
 };
 
@@ -236,6 +243,68 @@ describe( '#AUTH', () => {
                     expect( res.status ).to.be.equal( 201 );
                     expect( user.email ).to.be.equal( userData.email );
                 }); 
+        });
+    });
+
+    describe ( '#REFRESH TOKEN', () => {
+        it( 'A given unauthenticated user cannot refresh token', done => {
+            supertest
+                .post( routes.token.refresh )
+                .end( ( err, res ) => {
+                    if ( err ) done( err );
+                    expect(res.status).to.be.equals( 400 )
+                    expect( res.type ).to.be.equal( 'application/json' );
+                    expect( res.body.code ).to.be.equal( 150 );
+                    done();
+                });
+        });
+
+        it( 'A given user can refresh token', async () => {
+            const user = await factory.createUser();
+            const sessid = randomDigits.generate( 9999999, true );
+            const expiredToken = jwt.sign({ id: user.id, role: user.role, sessid}, secret, { expiresIn: -1 } );
+            const refresh_token = jwt.sign({ id: user.id, role:user.role, sessid}, refreshSecret, { expiresIn: refreshTTL } );
+            const payload = jwt.decode( refresh_token );
+
+            await models.Token.create( {UserId: user.id, sessid, expiresAt: ( payload.exp * 1000 ) } );
+        
+
+            await supertest
+                .post( routes.token.refresh )
+                .set( 'Authorization', `Bearer ${expiredToken}` )
+                .send({ refresh_token: refresh_token })
+                .expect( res => {
+                    const decoded = jwt.decode( res.body.token );
+                    // jwt return expiration in seconds
+                    // so need to convert to milliseconds to compare with now
+                    const tokenExpiration = decoded.exp * 1000; // converted to milliseconds
+                    const now = new Date().getTime(); // return milliseconds
+
+                    expect( res.status ).to.be.equals( 200 )
+                    expect( res.type ).to.be.equal( 'application/json' );
+                    expect( res.body ).to.have.own.property( 'token' );
+                    expect( res.body.token ).to.have.length.greaterThan( 10 );
+                    expect( expiredToken ).to.not.be.equal( res.body.token );
+                    expect( now ).to.be.lessThan( tokenExpiration );
+                });
+        });
+
+        it( 'A user cannot refresh token if refresh token is not whitelisted on database', async () => {
+            const user = await factory.createUser();
+            const expiredToken = factory.createTokenForUser( user, null, -1 );
+            const validRefreshToken = factory.createTokenForUser( user, refreshSecret, refreshTTL );
+
+            await supertest
+                .post( routes.token.refresh )
+                .set( 'Authorization', `Bearer ${expiredToken}` )
+                .send({ refresh_token: validRefreshToken })
+                .expect( res => {
+                    expect( res.status ).to.be.equals( 401 )
+                    expect( res.type ).to.be.equal( 'application/json' );
+                    expect( res.body ).to.have.own.property( 'code' );
+                    expect( res.body.code ).to.be.equals( 159 );
+                    expect( res.body ).to.not.have.own.property( 'token' );
+                });
         });
     });
 });

@@ -21,7 +21,12 @@ exports.update = async ( entity, params ) => {
     return user;
 };
 
-exports.saveSessid = async ( UserId, sessid ) => {
-    const token = await Token.create({ UserId, sessid });
+exports.saveSessid = async ( UserId, sessid, expiresAt ) => {
+    const token = await Token.create({ UserId, sessid, expiresAt });
+    return token;
+};
+
+exports.findRefreshToken = async ( params ) => {
+    const token = await Token.findOne({ where: params });
     return token;
 };

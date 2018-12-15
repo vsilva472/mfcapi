@@ -36,12 +36,5 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
-  Token.beforeValidate(( instance, options ) => {
-    if ( !instance.expiresAt ) {
-      const now = new Date();
-      now.setSeconds( now.getSeconds() + jwtConfig.refreshTTL );
-      instance.expiresAt = now;
-    }
-  });
   return Token;
 };

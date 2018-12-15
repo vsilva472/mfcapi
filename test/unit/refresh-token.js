@@ -8,20 +8,12 @@ const expect        = chai.expect;
 
 const models    = require( '../../models' );
 const factory   = require( '../helpers/factory.js' );
-const { secret }        = require( '../../config/jwt' )[ process.env.NODE_ENV || 'development' ];
+const { secret, refreshSecret, refreshTTL }  = require( '../../config/jwt' )[ process.env.NODE_ENV || 'development' ];
 const databaseHelper    = require( '../helpers/db.js' );
 
 
 describe( '#REFRESH TOKEN', () => {
     before( databaseHelper.clearTables );
-
-    it( 'Refresh Token TTL must be auto set when created', async () => {
-        const user = await factory.createUser();
-        const Token = await models.Token.create({ UserId: user.id, sessid: '999999' });
-        const now = new Date();
-        
-        expect( Token.expiresAt ).to.be.greaterThan( now );
-    });
 
     it( 'Refresh Token should be created on login', async () => {
         const user = await factory.createUser();
@@ -83,5 +75,144 @@ describe( '#REFRESH TOKEN', () => {
                     });
             });
         }).catch( err => done( err ) );
+    });
+
+    it( 'Refresh Token should not accept invalid token', done => {
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', 'SomeTest' )
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 400 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 151 );
+                done();
+            });
+    });
+
+    it( 'Refresh Token should not accept Invalid Bearer type', done => {
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', 'Bearersd sdd' ) // invalid token type
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 400 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 152 );
+                done();
+            });
+    });
+
+    it( 'Refresh Token should not accept bad Bearer value', done => {
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', 'Bearer invalid' ) // invalid token value
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 400 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 153 );
+                done();
+            });
+    });
+
+    it( 'Refresh Token should not accept invalid tokens', done => {
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', 'Bearer TokenLengthOKButThisIsAnInvalidTokenValue' ) // invalid token value
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 400 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 154 );
+                done();
+            });
+    });
+
+    it( 'Refresh Token should return same token if token is not expired', done => {
+        const token = factory.createTokenForUser({id: 5, role: 'blbla'});
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', `Bearer ${token}` )
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 200 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'token' );
+                expect( res.body.token ).to.be.equals( token );
+                done();
+            });
+    });
+
+    it( 'A Token should not be refreshed if refresh token is not send', done => {
+        const token = factory.createTokenForUser({id: 5, role: 'blbla'}, null, -1); // expired token
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', `Bearer ${token}` ) 
+            .send( {} )
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 400 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 155 );
+                done();
+            });
+    });
+
+    it( 'A Token should not be refreshed if refresh token is invalid', done => {
+        const token = factory.createTokenForUser({id: 5, role: 'blbla'}, null, -1); // expired token
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', `Bearer ${token}` ) 
+            .send( { refresh_token: 'invalid' } )
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 400 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 155 );
+                done();
+            });
+    });
+
+    it( 'A Token should not be refreshed if refresh token is expired', done => {
+        const token = factory.createTokenForUser({id: 5, role: 'blbla'}, null, -1); // expired token
+        const refreshToken = factory.createTokenForUser({id: 5, role: 'blbla'}, refreshSecret, -1); // expired token
+        
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', `Bearer ${token}` ) 
+            .send( { refresh_token: refreshToken } )
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 401 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 156 );
+                done();
+            });
+    });
+
+    it( 'A Token should not contain data from other user', done => {
+        const token = factory.createTokenForUser({id: 1, role: 'abc'}, null, -1); // expired token
+        const refreshToken = factory.createTokenForUser({id: 5, role: 'blbla'}, refreshSecret, refreshTTL); // expired token
+        
+        supertest
+            .post( '/auth/token/refresh' )
+            .set( 'Authorization', `Bearer ${token}` ) 
+            .send( { refresh_token: refreshToken } )
+            .end( ( err, res ) => {
+                if ( err ) return done( err );
+                expect( res.status ).to.be.equals( 403 );
+                expect( res.type ).to.be.equal( 'application/json' );
+                expect( res.body ).to.have.own.property( 'code' );
+                expect( res.body.code ).to.be.equals( 158 );
+                done();
+            });
     });
 });
