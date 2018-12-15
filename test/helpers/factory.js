@@ -8,8 +8,11 @@ const jwtConfig     = require( '../../config/jwt' )[ process.env.NODE_ENV || 'de
 const randomDigits  = require( '../../modules/random-numbers' ); 
 
 const factory = {
-    createTokenForUser: ( user ) => {
-        return jwt.sign({ id: user.id, role: user.role }, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+    createTokenForUser: ( user, salt, expiration, session_id ) => {
+        const ttl = expiration || jwtConfig.ttl;
+        const secret = salt || jwtConfig.secret
+        const sessid = session_id || randomDigits.generate( 9999999, true );
+        return jwt.sign({ id: user.id, role: user.role, sessid }, secret, { expiresIn: ttl } );
     },
     createUser: async ( email = null, role = 'user', name = 'my name', password = '123456' ) => {
         if ( ! email ) email = `u_${new Date().getTime()}@gmail.com`;
@@ -26,7 +29,11 @@ const factory = {
     },
     createRandomDigits: ( max, zero_lead = false ) => {
         return randomDigits.generate( max, zero_lead );
-    } 
+    },
+    createRefreshTokenForUser: async ( user, session_id ) => {
+        const sessid = session_id || randomDigits.generate( 9999999, true );
+        return await models.Token.create({ UserId: user.id, sessid, expiresAt: new Date() });
+    }
 };
 
 module.exports = factory;

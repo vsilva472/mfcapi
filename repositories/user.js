@@ -1,6 +1,8 @@
 'use strict'
 
-const User = require( '../models' ).User;
+const models    = require( '../models' ); 
+const User      = models.User;
+const Token     = models.Token;
 
 exports.create = async ( data ) => {
     const user = await User.create( data );
@@ -17,4 +19,18 @@ exports.update = async ( entity, params ) => {
     await user.update( params );
     
     return user;
+};
+
+exports.saveSessid = async ( UserId, sessid, expiresAt ) => {
+    const token = await Token.create({ UserId, sessid, expiresAt });
+    return token;
+};
+
+exports.findRefreshToken = async ( params ) => {
+    const token = await Token.findOne({ where: params });
+    return token;
+};
+
+exports.removeRefreshTokens = async ( where ) => {
+    await Token.destroy( { where: where } );
 };

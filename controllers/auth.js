@@ -46,13 +46,18 @@ exports.Signin = async ( req, res, next ) => {
         if ( ! user || ! await user.comparePassword( password ) ) 
             return res.status( 401 ).json( { message: 'Email e/ou Senha inválidos.' } );
         
-        const token = jwt.sign({ id: user.id, role: user.role}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        const sessid = randomDigits.generate( 9999999, true );
+        const token = jwt.sign({ id: user.id, role: user.role, sessid}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        const refresh_token = jwt.sign({ id: user.id, role:user.role, sessid}, jwtConfig.refreshSecret, { expiresIn: jwtConfig.refreshTTL } );
+        const payload = jwt.decode( refresh_token );
+
+        await repository.saveSessid( user.id, sessid, payload.exp * 1000);
         
         res.status( 200 ).json({ user: {
             id: user.id,
             name: user.name,
-            email: user.email
-        }, token });
+            email: user.email,
+        }, token, refresh_token });
     }
     catch ( e ) {
         res.status( 500 ).send( { message: e } );
@@ -95,7 +100,6 @@ exports.PasswordRecover = async ( req, res, next ) => {
         });
     }
     catch ( e ) {
-        console.log( e );
         res.status( 500 ).json({ 
             message: 'Ocorreu um erro no processo de recuperação de senha. Por favor tente novamente mais tarde', 
             error: e
@@ -124,6 +128,8 @@ exports.PasswordReset = async ( req, res, next ) => {
         if ( now > user.password_reset_expires )
             return res.status( 400 ).json({ message: 'Seu token expirou. Por favor refaça o processo para recuperar senha.' });
 
+        await repository.removeRefreshTokens({ UserId: user.id });
+
         await repository.update( user, { 
             password: password,
             password_reset_token: null, 
@@ -135,5 +141,38 @@ exports.PasswordReset = async ( req, res, next ) => {
     }
     catch ( e ) {
         res.status( 500 ).json( { message: 'Erro ao reinicializar a senha', error: e } );
+    }
+};
+
+exports.RefreshToken = async ( req, res, next ) => {
+    try {
+        const { id, role, sessid } = req;
+        const refreshTokenFromDd = await repository.findRefreshToken({ UserId: id, sessid });
+
+        if ( ! refreshTokenFromDd || refreshTokenFromDd.sessid != sessid ) {
+            return res.status( 401 ).json({ message: "The give refresh token is not allowed", code: 159 });
+        }
+
+        const token = jwt.sign({ id, role: role, sessid}, jwtConfig.secret, { expiresIn: jwtConfig.ttl } );
+        res.status( 200 ).json( { token } );
+    }
+    catch ( err ) { 
+        res.status( 500 ).json( { message: "Error while try to refresh token" } );
+    }
+};
+
+exports.SignOut = async ( req, res, next ) => {
+    try {
+        const UserId = req.userId;
+        const sessid = req.sessid;
+        const payload = { UserId, sessid };
+
+        await repository.removeRefreshTokens( payload );
+
+        return res.status( 200 ).json({ message: 'Successful signout' });
+
+    } catch ( err ) {
+        console.log( err );
+        res.status( 500 ).json({ message: 'Error while logout. Please try again.' });
     }
 };

@@ -20,10 +20,16 @@ module.exports = ( req, res, next ) => {
     if ( token.length < 10 ) return res.status( 401 ).send({ message: 'Token invalid' });
 
     jwt.verify( token, secret, ( err, decoded ) => {
-        if ( err )  return res.status( 401 ).send({ message: 'Token invalid' });
+        if ( err )  {
+            if ( err.name && err.name == 'TokenExpiredError' ) {
+                return res.status( 401 ).send({ message: 'Token expired Error', code: 190 });
+            }
+            return res.status( 401 ).send({ message: 'Token validation error.' });
+        }
 
-        req.userId = decoded.id;
-        req.role = decoded.role;
+        req.role    = decoded.role;
+        req.userId  = decoded.id;
+        req.sessid  = decoded.sessid;
         
         return next();
     });
