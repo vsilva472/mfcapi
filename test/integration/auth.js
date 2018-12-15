@@ -78,6 +78,26 @@ describe( '#AUTH', () => {
                 .send({ email: user.email, password: 'new pass', password_conf: 'new pass' })
                 .expect( 400 );
         });
+
+        it( 'A given registered user can reset your password', async () => {
+            const user  = await factory.createUser();
+            const now   = new Date();
+            now.setHours( now.getHours() + 1 );
+    
+            user.password_reset_token   = factory.createRandomDigits( 400, true );
+            user.password_reset_expires = now;
+            await user.save();
+            
+            await supertest
+                .post( routes.password.reset( user.password_reset_token ) )
+                .send({ email: user.email, password: 'new pass', password_conf: 'new pass' })
+                .expect( async res => {
+                    const checkUser = await models.User.findOne({ where: { id: user.id } });
+                    expect( res.status ).to.be.equal( 200 );
+                    expect( res.type ).to.be.equal( 'application/json' );
+                    expect( user.password ).to.not.be.equals( checkUser.password );
+                });
+        });
     });
 
     describe( '#PASSWORD RECOVER', () => {
