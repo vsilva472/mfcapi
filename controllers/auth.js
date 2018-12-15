@@ -128,7 +128,7 @@ exports.PasswordReset = async ( req, res, next ) => {
         if ( now > user.password_reset_expires )
             return res.status( 400 ).json({ message: 'Seu token expirou. Por favor refaça o processo para recuperar senha.' });
 
-        await repository.removeRefreshTokens( user.id );
+        await repository.removeRefreshTokens({ UserId: user.id });
 
         await repository.update( user, { 
             password: password,
@@ -158,5 +158,21 @@ exports.RefreshToken = async ( req, res, next ) => {
     }
     catch ( err ) { 
         res.status( 500 ).json( { message: "Error while try to refresh token" } );
+    }
+};
+
+exports.SignOut = async ( req, res, next ) => {
+    try {
+        const UserId = req.userId;
+        const sessid = req.sessid;
+        const payload = { UserId, sessid };
+
+        await repository.removeRefreshTokens( payload );
+
+        return res.status( 200 ).json({ message: 'Successful signout' });
+
+    } catch ( err ) {
+        console.log( err );
+        res.status( 500 ).json({ message: 'Error while logout. Please try again.' });
     }
 };

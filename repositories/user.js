@@ -31,6 +31,6 @@ exports.findRefreshToken = async ( params ) => {
     return token;
 };
 
-exports.removeRefreshTokens = async ( UserId ) => {
-    await Token.destroy( { where: { UserId } } );
+exports.removeRefreshTokens = async ( where ) => {
+    await Token.destroy( { where: where } );
 };

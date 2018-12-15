@@ -286,44 +286,61 @@ describe( '#AUTH', () => {
             const payload = jwt.decode( refresh_token );
 
             await models.Token.create( {UserId: user.id, sessid, expiresAt: ( payload.exp * 1000 ) } );
-        
-
-            await supertest
-                .post( routes.token.refresh )
+    
+            const response = await supertest.post( routes.token.refresh )
                 .set( 'Authorization', `Bearer ${expiredToken}` )
-                .send({ refresh_token: refresh_token })
-                .expect( res => {
-                    const decoded = jwt.decode( res.body.token );
-                    // jwt return expiration in seconds
-                    // so need to convert to milliseconds to compare with now
-                    const tokenExpiration = decoded.exp * 1000; // converted to milliseconds
-                    const now = new Date().getTime(); // return milliseconds
+                .send({ refresh_token: refresh_token });
+            
+            const decoded = jwt.decode( response.body.token );
+            // jwt return expiration in seconds
+            // so need to convert to milliseconds to compare with now
+            const tokenExpiration = decoded.exp * 1000; // converted to milliseconds
+            const now = new Date().getTime(); // return milliseconds
 
-                    expect( res.status ).to.be.equals( 200 )
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( res.body ).to.have.own.property( 'token' );
-                    expect( res.body.token ).to.have.length.greaterThan( 10 );
-                    expect( expiredToken ).to.not.be.equal( res.body.token );
-                    expect( now ).to.be.lessThan( tokenExpiration );
-                });
+            expect( response.status ).to.be.equals( 200 )
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'token' );
+            expect( response.body.token ).to.have.length.greaterThan( 10 );
+            expect( expiredToken ).to.not.be.equal( response.body.token );
+            expect( now ).to.be.lessThan( tokenExpiration );
         });
 
         it( 'A user cannot refresh token if refresh token is not whitelisted on database', async () => {
             const user = await factory.createUser();
-            const expiredToken = factory.createTokenForUser( user, null, -1 );
-            const validRefreshToken = factory.createTokenForUser( user, refreshSecret, refreshTTL );
+            const sessid = factory.createRandomDigits( 999999, true );
+            const expiredToken = factory.createTokenForUser( user, null, -1, sessid );
+            const validRefreshToken = factory.createTokenForUser( user, refreshSecret, refreshTTL, sessid );
 
-            await supertest
-                .post( routes.token.refresh )
-                .set( 'Authorization', `Bearer ${expiredToken}` )
-                .send({ refresh_token: validRefreshToken })
-                .expect( res => {
-                    expect( res.status ).to.be.equals( 401 )
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( res.body ).to.have.own.property( 'code' );
-                    expect( res.body.code ).to.be.equals( 159 );
-                    expect( res.body ).to.not.have.own.property( 'token' );
-                });
+            const request =  await supertest.post( routes.token.refresh ).set( 'Authorization', `Bearer ${expiredToken}` )
+            .send({ refresh_token: validRefreshToken });
+            
+            expect( request.statusCode ).to.be.equals( 401 )
+            expect( request.type ).to.be.equal( 'application/json' );
+            expect( request.body ).to.have.own.property( 'code' );
+            expect( request.body.code ).to.be.equals( 159 );
+            expect( request.body ).to.not.have.own.property( 'token' );
+        });
+    });
+
+    describe( '#SIGNOUT', () => {
+        it( 'A given unauthenticated user cannot sign out', async () => {
+            const request = await supertest.post( '/auth/signout' ).send();
+
+            expect( request.statusCode ).to.be.equals( 401 );
+            expect( request.type ).to.be.equals( 'application/json' );
+        });
+
+        it( 'A given authenticated user can sign out', async () => {
+            const user1   = await factory.createUser();
+            const sessid  = factory.createRandomDigits( 9999999, true );
+            const token   = factory.createTokenForUser( user1, null, null, sessid );
+
+            await factory.createRefreshTokenForUser( user1, sessid );
+            
+            const request = await supertest.post( '/auth/signout' ).set( 'Authorization', `Bearer ${token}` ).send();
+
+            expect( request.statusCode ).to.be.equal( 200 );
+            expect( request.type ).to.be.equals( 'application/json' );
         });
     });
 });
