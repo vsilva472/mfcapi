@@ -49,16 +49,15 @@ describe( "#User Entries",  () => {
             await factory.createEntry( user1.id );
             await factory.createEntry( user2.id );
     
-            await supertest
+            const response = await supertest
                 .get( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.body ).to.be.an.array();
-                    expect( res.body ).to.have.lengthOf( 1 );
-                    expect( res.body[ 0 ] ).to.have.own.property( 'UserId' );
-                    expect( res.body[ 0 ].UserId ).to.be.equal( user1.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
+
+            expect( response.status ).to.be.equal( 200 );
+            expect( response.body ).to.be.an.array();
+            expect( response.body ).to.have.lengthOf( 1 );
+            expect( response.body[ 0 ] ).to.have.own.property( 'UserId' );
+            expect( response.body[ 0 ].UserId ).to.be.equal( user1.id );
         });
 
         it( 'Admins can list entries of any user', async () => {
@@ -72,17 +71,15 @@ describe( "#User Entries",  () => {
             await factory.createEntry( user1.id );
             await factory.createEntry( user2.id );
 
-            await supertest
+            const response = await supertest
                 .get( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.body ).to.be.an.array();
-                    expect( res.body ).to.have.lengthOf( 1 );
-                    expect( res.body[ 0 ] ).to.have.own.property( 'UserId' );
-                    expect( res.body[ 0 ].UserId ).to.be.equal( user1.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` );
 
+            expect( response.status ).to.be.equal( 200 );
+            expect( response.body ).to.be.an.array();
+            expect( response.body ).to.have.lengthOf( 1 );
+            expect( response.body[ 0 ] ).to.have.own.property( 'UserId' );
+            expect( response.body[ 0 ].UserId ).to.be.equal( user1.id );
         });
     });
 
@@ -136,14 +133,14 @@ describe( "#User Entries",  () => {
             const tokenForUser1     = factory.createTokenForUser( user1 ); 
             const routeForEntry1    = `/users/${user1.id}/entries/${entryForUser1.id}`;
 
-            await supertest
+            const response = await supertest
                 .get( routeForEntry1 )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.body ).to.have.own.property( 'UserId' );
-                    expect( res.body.UserId ).to.be.equal( user1.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'UserId' );
+            expect( response.body.UserId ).to.be.equal( user1.id );
         });
 
         it( 'Admins can view entries of any user', async () => {
@@ -155,14 +152,14 @@ describe( "#User Entries",  () => {
             const tokenForAdmin    = factory.createTokenForUser( admin ); 
             const routeForEntry    = `/users/${user.id}/entries/${entry.id}`;
 
-            await supertest
+            const response = await supertest
                 .get( routeForEntry )
-                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.body ).to.have.own.property( 'UserId' );
-                    expect( res.body.UserId ).to.be.equal( user.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` );
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'UserId' );
+            expect( response.body.UserId ).to.be.equal( user.id );
         });
     });
 
@@ -225,19 +222,20 @@ describe( "#User Entries",  () => {
             const tokenForUser1 = factory.createTokenForUser( user1 ); 
             const now = new Date();
 
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
                 .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .send({ label: 'My Entry', type: 1, value: 5.77, registeredAt: now })
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 201 );
-                    expect( res.body ).to.have.own.property( 'data' );
-                    expect( res.body.data.UserId ).to.be.equal( user1.id.toString() );
-                    expect( res.body.data.label ).to.be.equal( 'My Entry' );
-                    expect( res.body.data.type ).to.be.equal( 1 );
-                    expect( res.body.data.value ).to.be.equal( 5.77 );
-                    expect( res.body.data.registeredAt ).to.be.equal( now.toISOString() );
-                });
+                .send({ label: 'My Entry', type: 1, value: 5.77, registeredAt: now });
+
+            expect( response.statusCode ).to.be.equal( 201 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'data' );
+            expect( response.body.data.UserId ).to.be.equal( user1.id.toString() );
+            expect( response.body.data.label ).to.be.equal( 'My Entry' );
+            expect( response.body.data.type ).to.be.equal( 1 );
+            expect( response.body.data.value ).to.be.equal( 5.77 );
+            expect( response.body.data.registeredAt ).to.be.equal( now.toISOString() );
+
         });
 
         it( 'A given user cannot create an entry with categories of other user', async () => {
@@ -251,24 +249,21 @@ describe( "#User Entries",  () => {
             const tokenForUser1 = factory.createTokenForUser( user1 ); 
             const now = new Date();
 
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
                 .set( 'Authorization', `Bearer ${tokenForUser1}` )
                 .send({ 
                     label: 'My Entry', type: 1, value: 5.77, registeredAt: now, 
                     categories: [ categoryForUser1.id, categoryForUser2.id  ] 
-                })
-                .expect( res => {
-                    expect( res.status ).to.be.equals( 422 );
-
-                    expect( res.body ).to.have.own.property( 'errors' );
-                    expect( res.body.errors ).to.be.an.array();
-                    
-                    expect( res.body.errors ).to.have.lengthOf( 1 );
-                    
-                    expect( res.body.errors[0] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[0].param ).to.be.equal( 'categories' );
                 });
+
+            expect( response.statusCode ).to.be.equals( 422 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'errors' );
+            expect( response.body.errors ).to.be.an.array();
+            expect( response.body.errors ).to.have.lengthOf( 1 );
+            expect( response.body.errors[0] ).to.have.own.property( 'param' );
+            expect( response.body.errors[0].param ).to.be.equal( 'categories' );
         });
 
         it( 'A given user can create an entry with your own categories', async () => {
@@ -285,19 +280,18 @@ describe( "#User Entries",  () => {
             const tokenForUser1 = factory.createTokenForUser( user1 ); 
             const now = new Date();
 
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
                 .set( 'Authorization', `Bearer ${tokenForUser1}` )
                 .send({ 
                     label: 'My Entry', type: 1, value: 5.77, registeredAt: now, 
                     categories: [ category1.id, category2.id  ] 
-                })
-                .expect( res => {
-                    expect( res.status ).to.be.equals( 201 );
-
-                    expect( res.body ).to.have.own.property( 'data' );
-                    // ToDo check categories ids
                 });
+            
+            expect( response.statusCode ).to.be.equals( 201 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'data' );
+                    // ToDo check categories ids
         });
 
         it( 'Admins can create entries for any user', async () => {
@@ -308,19 +302,19 @@ describe( "#User Entries",  () => {
             const tokenForAdmin = factory.createTokenForUser( admin ); 
             const now = new Date();
 
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
                 .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .send({ label: 'My Entry', type: 1, value: 5.77, registeredAt: now })
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 201 );
-                    expect( res.body ).to.have.own.property( 'data' );
-                    expect( res.body.data.UserId ).to.be.equal( user1.id.toString() );
-                    expect( res.body.data.label ).to.be.equal( 'My Entry' );
-                    expect( res.body.data.type ).to.be.equal( 1 );
-                    expect( res.body.data.value ).to.be.equal( 5.77 );
-                    expect( res.body.data.registeredAt ).to.be.equal( now.toISOString() );
-                });
+                .send({ label: 'My Entry', type: 1, value: 5.77, registeredAt: now });
+
+            expect( response.statusCode ).to.be.equal( 201 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'data' );
+            expect( response.body.data.UserId ).to.be.equal( user1.id.toString() );
+            expect( response.body.data.label ).to.be.equal( 'My Entry' );
+            expect( response.body.data.type ).to.be.equal( 1 );
+            expect( response.body.data.value ).to.be.equal( 5.77 );
+            expect( response.body.data.registeredAt ).to.be.equal( now.toISOString() );
         });
     });
 
@@ -447,24 +441,22 @@ describe( "#User Entries",  () => {
             const routeForUser1    = `/users/${user1.id}/entries/${entry.id}`;
             const tokenForUser1    = factory.createTokenForUser( user1 );
 
-            await supertest
-                .put( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .send({ 
-                    label: 'Updated Label', 
-                    type: 1, 
-                    value: 7.77, 
-                    registeredAt: new Date(), 
-                    categories: [ category2.id ] 
-                })
-                .expect( async res => {
-                    const updatedEntry = await models.Entry.findOne({ where: { id: entry.id }, include: [{ model:  models.Category }] })
-                    
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( updatedEntry.Categories ).to.have.lengthOf( 1 );
-                    expect( updatedEntry.Categories[0].id ).to.be.equal( category2.id );
-                });
+            const payload = { 
+                label: 'Updated Label', 
+                type: 1, 
+                value: 7.77, 
+                registeredAt: new Date(), 
+                categories: [ category2.id ] 
+            };
+
+            const response      = await supertest.put( routeForUser1 ).set( 'Authorization', `Bearer ${tokenForUser1}` ).send( payload );
+            const updatedEntry  = await models.Entry.findOne({ where: { id: entry.id }, include: [{ model:  models.Category }] })
+            
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( updatedEntry.Categories ).to.have.lengthOf( 1 );
+            expect( updatedEntry.Categories[0].id ).to.be.equal( category2.id );
         }); 
 
         it( "Admins can update entries for any user", async () => {
@@ -513,14 +505,15 @@ describe( "#User Entries",  () => {
             const route = `/users/${user1.id}/entries/${entry.id}`;
             const tokenForUser1 = factory.createTokenForUser( user1 );
 
-            await supertest
+            const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( async res => {
-                    const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( deletedEntry ).to.be.equal( null );
-                });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
+
+            const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( deletedEntry ).to.be.equal( null );
         });
 
         it( 'A given user can delete your own entry and mantain your categories', async () => {
@@ -533,20 +526,20 @@ describe( "#User Entries",  () => {
             const route = `/users/${user1.id}/entries/${entry.id}`;
             const tokenForUser1 = factory.createTokenForUser( user1 );
 
-            await supertest
+            const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( async res => {
-                    const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
-                    const cat   = await models.Category.findOne({ where: { id: category.id }, include: [{ model: models.Entry }] });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
 
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( deletedEntry ).to.be.equal( null );
-                    expect( cat ).to.not.be.equal( null );
-                    expect( cat.id ).to.be.equal( category.id );
-                    expect( cat.UserId ).to.be.equal( category.UserId );
-                    expect( cat.Entries ).to.have.lengthOf( 0 );
-                });
+            const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
+            const cat   = await models.Category.findOne({ where: { id: category.id }, include: [{ model: models.Entry }] });
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( deletedEntry ).to.be.equal( null );
+            expect( cat ).to.not.be.equal( null );
+            expect( cat.id ).to.be.equal( category.id );
+            expect( cat.UserId ).to.be.equal( category.UserId );
+            expect( cat.Entries ).to.have.lengthOf( 0 );
         });
 
         it( 'Admins can delete users entries', async () => {
@@ -558,14 +551,15 @@ describe( "#User Entries",  () => {
             
             const tokenForAdmin = factory.createTokenForUser( admin );
 
-            await supertest
+            const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .expect( async res => {
-                    const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( deletedEntry ).to.be.equal( null );
-                });
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` );
+            
+            const deletedEntry = await models.Entry.findOne({ where: { id: entry.id } });
+            
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( deletedEntry ).to.be.equal( null );
         });
     });
 });
