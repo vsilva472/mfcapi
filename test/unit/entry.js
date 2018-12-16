@@ -21,24 +21,21 @@ describe( '#ENTRY', () => {
         const routeForUser1    = `/users/${user1.id}/entries`;
         const tokenForUser1    = factory.createTokenForUser( user1 );
 
-        await supertest
-            .post( routeForUser1 )
-            .set( 'Authorization', `Bearer ${tokenForUser1}` )
-            .send({ 
-                label: 'Entry 5', 
-                type: 1, 
-                value: 7.77, 
-                registeredAt: new Date(), 
-                categories: [ category1.id, category1.id, category1.id ] 
-            })
-            .expect( async res => {
-                const createdEntry = await models.Entry.findOne({ where: { id: res.body.data.id }, include: [{ model:  models.Category }] })
+        const payload = { 
+            label: 'Entry 5', 
+            type: 1, 
+            value: 7.77, 
+            registeredAt: new Date(), 
+            categories: [ category1.id, category1.id, category1.id ] 
+        }
+        
+        const response      = await supertest.post( routeForUser1 ).set( 'Authorization', `Bearer ${tokenForUser1}` ).send( payload );
+        const createdEntry  = await models.Entry.findOne({ where: { id: response.body.data.id }, include: [{ model:  models.Category }] })
                 
-                expect( res.status ).to.be.equal( 201 );
-                expect( res.type ).to.be.equal( 'application/json' );
-                expect( createdEntry.Categories ).to.have.lengthOf( 1 );
-                expect( createdEntry.Categories[0].id ).to.be.equal( category1.id );
-            });
+        expect( response.status ).to.be.equal( 201 );
+        expect( response.type ).to.be.equal( 'application/json' );
+        expect( createdEntry.Categories ).to.have.lengthOf( 1 );
+        expect( createdEntry.Categories[0].id ).to.be.equal( category1.id );
     });
 
     it( 'Should not associate duplicated categories when update an entry', async () => {
@@ -53,23 +50,20 @@ describe( '#ENTRY', () => {
         const routeForUser1    = `/users/${user1.id}/entries/${entry.id}`;
         const tokenForUser1    = factory.createTokenForUser( user1 );
 
-        await supertest
-            .put( routeForUser1 )
-            .set( 'Authorization', `Bearer ${tokenForUser1}` )
-            .send({ 
-                label: 'Updated Label', 
-                type: 1, 
-                value: 7.77, 
-                registeredAt: new Date(), 
-                categories: [ category2.id, category2.id, category2.id ] 
-            })
-            .expect( async res => {
-                const updatedEntry = await models.Entry.findOne({ where: { id: entry.id }, include: [{ model:  models.Category }] })
-                
-                expect( res.status ).to.be.equal( 200 );
-                expect( res.type ).to.be.equal( 'application/json' );
-                expect( updatedEntry.Categories ).to.have.lengthOf( 1 );
-                expect( updatedEntry.Categories[0].id ).to.be.equal( category2.id );
-            });
+        const payload = { 
+            label: 'Updated Label', 
+            type: 1, 
+            value: 7.77, 
+            registeredAt: new Date(), 
+            categories: [ category2.id, category2.id, category2.id ] 
+        };
+
+        const response      = await supertest.put( routeForUser1 ).set( 'Authorization', `Bearer ${tokenForUser1}` ).send( payload );
+        const updatedEntry  = await models.Entry.findOne({ where: { id: entry.id }, include: [{ model:  models.Category }] })
+        
+        expect( response.status ).to.be.equal( 200 );
+        expect( response.type ).to.be.equal( 'application/json' );
+        expect( updatedEntry.Categories ).to.have.lengthOf( 1 );
+        expect( updatedEntry.Categories[0].id ).to.be.equal( category2.id );
     });
 });

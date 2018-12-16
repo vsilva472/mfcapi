@@ -16,65 +16,42 @@ describe( '#REFRESH TOKEN', () => {
     before( databaseHelper.clearTables );
 
     it( 'Refresh Token should be created on login', async () => {
-        const user = await factory.createUser();
-        const credentials = { email: user.email, password: '123456' };
+        const user          = await factory.createUser();
+        const credentials   = { email: user.email, password: '123456' };
+        const response      = await supertest.post( '/auth/signin' ).send( credentials )
 
-        await supertest
-            .post( '/auth/signin' )
-            .send( credentials )
-            .expect( res => {
-                expect( res.status ).to.be.equal( 200 );
-                expect( res.type ).to.be.equal( 'application/json' );
-                expect( res.body ).to.have.own.property( 'token' );
-                expect( res.body.token ).to.have.length.greaterThan( 20 );
-                expect( res.body ).to.have.own.property( 'refresh_token' );
-                expect( res.body.refresh_token ).to.have.length.greaterThan( 20 );
-            });
+        expect( response.status ).to.be.equal( 200 );
+        expect( response.type ).to.be.equal( 'application/json' );
+        expect( response.body ).to.have.own.property( 'token' );
+        expect( response.body.token ).to.have.length.greaterThan( 20 );
+        expect( response.body ).to.have.own.property( 'refresh_token' );
+        expect( response.body.refresh_token ).to.have.length.greaterThan( 20 );
     });
 
     it( 'Refresh Token sessid should be attached to JWT Token payload', async () => {
-        const user = await factory.createUser();
-        const credentials = { email: user.email, password: '123456' };
+        const user          = await factory.createUser();
+        const credentials   = { email: user.email, password: '123456' };
+        const response      = await supertest.post( '/auth/signin' ).send( credentials );
+        const token         = response.body.token;
+        const decoded       = jwt.verify( token, secret );
 
-        await supertest
-        .post( '/auth/signin' )
-        .send( credentials )
-        .expect( res => {
-            const token = res.body.token;
+        expect( response.status ).to.be.equal( 200 );
+        expect( response.type ).to.be.equal( 'application/json' );
+        expect( response.body ).to.have.own.property( 'token' );
+        expect( decoded ).to.have.own.property( 'sessid' );
+        expect( decoded.sessid ).to.not.be.equal(null);
+        expect( decoded.sessid ).to.have.lengthOf( 7 );
+});
 
-            jwt.verify( token, secret, ( err, decoded ) => {
-                if ( err )  throw err;
+    it( 'Refresh Token sessid should be stored in database for later check', async ()  => {
+        const user      = await factory.createUser();
+        const response  = await supertest.post( '/auth/signin' ).send( { email: user.email, password: '123456' } );
+        const token     = await models.Token.findOne( { where: { UserId: user.id } } );
         
-                expect( res.status ).to.be.equal( 200 );
-                expect( res.type ).to.be.equal( 'application/json' );
-                expect( res.body ).to.have.own.property( 'token' );
-                expect( decoded ).to.have.own.property( 'sessid' );
-                expect( decoded.sessid ).to.not.be.equal(null);
-                expect( decoded.sessid ).to.have.lengthOf( 7 );
-            });
-        });
-    });
-
-    it( 'Refresh Token sessid should be stored in database for later check', done => {
-        factory.createUser().then( user => {
-            supertest
-                .post( '/auth/signin' )
-                .send( { email: user.email, password: '123456' } )
-                .end( ( err, res ) => {
-                    if ( err ) done(err);
-
-                    models.Token.findOne( { where: { UserId: user.id } } ).then( token => {
-                        expect( res.status ).to.be.equal( 200 );
-                        expect( res.type ).to.be.equal( 'application/json' );
-                        expect( token ).to.not.be.equals( null );
-                        expect( token.sessid ).to.have.lengthOf( 7 );
-                        done();
-                    })
-                    .catch( err => {
-                        done(err);
-                    });
-            });
-        }).catch( err => done( err ) );
+        expect( response.statusCode ).to.be.equal( 200 );
+        expect( response.type ).to.be.equal( 'application/json' );
+        expect( token ).to.not.be.equals( null );
+        expect( token.sessid ).to.have.lengthOf( 7 );            
     });
 
     it( 'Refresh Token should not accept invalid token', done => {

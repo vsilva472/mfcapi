@@ -72,10 +72,11 @@ describe( '#AUTH', () => {
             user.password_reset_expires = now;
             await user.save();
             
-            await supertest
+            const response = await supertest
                 .post( routes.password.reset( user.password_reset_token ) )
-                .send({ email: user.email, password: 'new pass', password_conf: 'new pass' })
-                .expect( 400 );
+                .send({ email: user.email, password: 'new pass', password_conf: 'new pass' });
+            
+            expect( response.statusCode ).to.be.equal( 400 );
         });
 
         it( 'A given registered user can reset your password', async () => {
@@ -87,15 +88,15 @@ describe( '#AUTH', () => {
             user.password_reset_expires = now;
             await user.save();
             
-            await supertest
+            const response = await supertest
                 .post( routes.password.reset( user.password_reset_token ) )
-                .send({ email: user.email, password: 'new pass', password_conf: 'new pass' })
-                .expect( async res => {
-                    const checkUser = await models.User.findOne({ where: { id: user.id } });
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( user.password ).to.not.be.equals( checkUser.password );
-                });
+                .send({ email: user.email, password: 'new pass', password_conf: 'new pass' });
+
+            const checkUser = await models.User.findOne({ where: { id: user.id } });
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( user.password ).to.not.be.equals( checkUser.password );
         });
     });
 
@@ -120,17 +121,13 @@ describe( '#AUTH', () => {
         });
 
         it( 'A given user must can recover password', async () => {
-            const user = await factory.createUser();
-
-            await supertest
-                .post( routes.password.recover )
-                .send( { email: user.email } )
-                .expect( async res => {
-                    const checkUser = await models.User.findOne({ where: { email: user.email } });
-                    expect( res.status ).to.equal( 200 );
-                    expect( checkUser.password_reset_token.length ).to.equal( 4 );
-                    expect( Object.prototype.toString.call( checkUser.password_reset_expires ) ).to.be.equal( '[object Date]' );
-                });
+            const user      = await factory.createUser();
+            const response  = await supertest.post( routes.password.recover ).send( { email: user.email } );
+            const checkUser = await models.User.findOne({ where: { email: user.email } });
+            
+            expect( response.status ).to.equal( 200 );
+            expect( checkUser.password_reset_token.length ).to.equal( 4 );
+            expect( Object.prototype.toString.call( checkUser.password_reset_expires ) ).to.be.equal( '[object Date]' );
         })
     });
 
@@ -168,31 +165,27 @@ describe( '#AUTH', () => {
         });
 
         it( 'A given registered user can sign', async () => {
-            const user = await factory.createUser();
+            const user      = await factory.createUser();
+            const response  =  await supertest.post( routes.signin ).send({ email: user.email, password: '123456' }); // factory default password
 
-            await supertest
-                .post( routes.signin )
-                .send({ email: user.email, password: '123456' }) // factory default password
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
 
-                    expect( res.body ).to.have.own.property( 'user' );
-                    
-                    expect( res.body.user ).to.have.own.property( 'email' );
-                    expect( res.body.user ).to.have.own.property( 'name' );
-    
-                    expect( res.body.user ).to.not.have.own.property( 'password' );
-                    expect( res.body.user ).to.not.have.own.property( 'createdAt' );
-                    expect( res.body.user ).to.not.have.own.property( 'updatedAt' );
-                    
-                    expect( res.body.user.email ).to.equal( user.email );
-                    expect( res.body.user.name ).to.equal( user.name );
-    
-                    expect( res.body ).to.have.own.property( 'token' );
-                    expect( typeof res.body.token ).to.equal( 'string' );
-                    expect( res.body.token.length ).to.greaterThan( 0 );
-                });
+            expect( response.body ).to.have.own.property( 'user' );
+            
+            expect( response.body.user ).to.have.own.property( 'email' );
+            expect( response.body.user ).to.have.own.property( 'name' );
+
+            expect( response.body.user ).to.not.have.own.property( 'password' );
+            expect( response.body.user ).to.not.have.own.property( 'createdAt' );
+            expect( response.body.user ).to.not.have.own.property( 'updatedAt' );
+            
+            expect( response.body.user.email ).to.equal( user.email );
+            expect( response.body.user.name ).to.equal( user.name );
+
+            expect( response.body ).to.have.own.property( 'token' );
+            expect( typeof response.body.token ).to.equal( 'string' );
+            expect( response.body.token.length ).to.greaterThan( 0 );
         });
     });
 
@@ -235,33 +228,26 @@ describe( '#AUTH', () => {
         });
 
         it( 'A given registered user cannot signup with same email', async () => {
-            const user = await factory.createUser();
-            const newUserData = {email: user.email, name: 'My name', password: '123456', password_conf: '123456'};
-            
-            await supertest
-                .post( routes.signup )
-                .send( newUserData )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 422 );
-                    expect( res.body ).to.have.own.property( 'errors' );
-                    expect( res.body.errors ).to.be.an.array();
-                    expect( res.body.errors ).to.have.lengthOf( 1 );
-                    expect( res.body.errors[0] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[0].param ).to.be.equal( 'email' );
-                }); 
+            const user          = await factory.createUser();
+            const newUserData   = {email: user.email, name: 'My name', password: '123456', password_conf: '123456'};
+            const response      = await supertest.post( routes.signup ).send( newUserData );
+
+            expect( response.statusCode ).to.be.equal( 422 );
+            expect( response.body ).to.have.own.property( 'errors' );
+            expect( response.body.errors ).to.be.an.array();
+            expect( response.body.errors ).to.have.lengthOf( 1 );
+            expect( response.body.errors[0] ).to.have.own.property( 'param' );
+            expect( response.body.errors[0].param ).to.be.equal( 'email' );
         });
 
         it( 'A given unregistered user can signup', async () => {
-            const userData = { name: 'Hinata Uzumaki', email: 'hinata_sama@konoha.jp', password: '123456', password_conf: '123456' };
+            const payload   = { name: 'Hinata Uzumaki', email: 'hinata_sama@konoha.jp', password: '123456', password_conf: '123456' };
+            const response  = await supertest.post( routes.signup ).send( payload );
+            const user      = await models.User.findOne({ where: { email: payload.email } });
             
-            await supertest
-                .post( routes.signup )
-                .send( userData )
-                .expect( async res => {
-                    const user = await models.User.findOne({ where: { email: userData.email } });
-                    expect( res.status ).to.be.equal( 201 );
-                    expect( user.email ).to.be.equal( userData.email );
-                }); 
+            expect( response.statusCode ).to.be.equal( 201 );
+            expect( user.name ).to.be.equals( payload.name );
+            expect( user.email ).to.be.equal( payload.email );
         });
     });
 
