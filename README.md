@@ -72,5 +72,9 @@ Run migrations with command `$ node_modules\.bin\sequelize db:migrate --env=XXXX
 
 **Note** To migration work you should setup env vars with base on environment you want to build.
 
+### Donation
+Help me to improve this project sending me some **HTMLCOIN**  
+Wallet: **[HqgaiK6T1o2JP4p3p34CZp2g3XnSsSdCXp](htmlcoin:HqgaiK6T1o2JP4p3p34CZp2g3XnSsSdCXp?label=Doa%C3%A7%C3%B5es%20Github)**  
+
 ### License
 MIT
