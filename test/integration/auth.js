@@ -209,19 +209,22 @@ describe( '#AUTH', () => {
                     expect( res.type ).to.be.equal( 'application/json' );
 
                     expect( res.body.errors ).to.be.an.array();
-                    expect( res.body.errors ).to.have.lengthOf( 4 );
+                    expect( res.body.errors ).to.have.lengthOf( 5 );
 
                     expect( res.body.errors[0] ).to.have.own.property( 'param' );
                     expect( res.body.errors[0].param ).to.be.equal( 'email' );
-                    
-                    expect( res.body.errors[1] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[1].param ).to.be.equal( 'name' );
 
+                    expect( res.body.errors[1] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[1].param ).to.be.equal( 'email' );
+                    
                     expect( res.body.errors[2] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[2].param ).to.be.equal( 'password' );
+                    expect( res.body.errors[2].param ).to.be.equal( 'name' );
 
                     expect( res.body.errors[3] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[3].param ).to.be.equal( 'password_conf' );
+                    expect( res.body.errors[3].param ).to.be.equal( 'password' );
+
+                    expect( res.body.errors[4] ).to.have.own.property( 'param' );
+                    expect( res.body.errors[4].param ).to.be.equal( 'password_conf' );
                     
                     done();
                 });
