@@ -60,6 +60,7 @@ exports.Signin = async ( req, res, next ) => {
         }, token, refresh_token });
     }
     catch ( e ) {
+        console.log(e);
         res.status( 500 ).send( { message: e } );
     }
 };

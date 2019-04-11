@@ -46,15 +46,15 @@ describe( "#USER CATEGORIES",  () => {
     
             await factory.createCategory( user1.id );
     
-            await supertest
+            const response = await supertest
                 .get( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equals( 200 );
-                    expect( res.body ).to.have.lengthOf( 1 );
-                    expect( res.body[0] ).to.have.own.property( 'UserId' );
-                    expect( res.body[0].UserId ).to.be.equal( user1.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
+
+            expect( response.statusCode ).to.be.equals( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.lengthOf( 1 );
+            expect( response.body[0] ).to.have.own.property( 'UserId' );
+            expect( response.body[0].UserId ).to.be.equal( user1.id );
         });
 
         it( 'Admins can list categories of any user', async () => {
@@ -67,20 +67,19 @@ describe( "#USER CATEGORIES",  () => {
             await factory.createCategory( user1.id );
             await factory.createCategory( user1.id );
     
-            await supertest
+            const response = await supertest
                 .get( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equals( 200 );
-                    expect( res.type ).to.be.equals( 'application/json' );
-                    expect( res.body ).to.have.lengthOf( 2 );
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` );
 
-                    expect( res.body[0] ).to.have.own.property( 'UserId' );
-                    expect( res.body[0].UserId ).to.be.equal( user1.id );
-                    
-                    expect( res.body[1] ).to.have.own.property( 'UserId' );
-                    expect( res.body[1].UserId ).to.be.equal( user1.id );
-                });
+            expect( response.statusCode ).to.be.equals( 200 );
+            expect( response.type ).to.be.equals( 'application/json' );
+            expect( response.body ).to.have.lengthOf( 2 );
+
+            expect( response.body[0] ).to.have.own.property( 'UserId' );
+            expect( response.body[0].UserId ).to.be.equal( user1.id );
+            
+            expect( response.body[1] ).to.have.own.property( 'UserId' );
+            expect( response.body[1].UserId ).to.be.equal( user1.id );
         });
     });
 
@@ -132,15 +131,14 @@ describe( "#USER CATEGORIES",  () => {
             const routeForUser1      = `/users/${user1.id}/categories/${cateogyForUser1.id}`;
             const tokenForUser1      = factory.createTokenForUser( user1 );  
     
-            await supertest
+            const response = await supertest
                 .get( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( res.body ).to.have.own.property( 'UserId' );
-                    expect( res.body.UserId ).to.be.equal( user1.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'UserId' );
+            expect( response.body.UserId ).to.be.equal( user1.id );
         });
 
         it( 'Admins can see details of a category of any user', async () => {
@@ -152,15 +150,14 @@ describe( "#USER CATEGORIES",  () => {
             const routeForUser1      = `/users/${user1.id}/categories/${cateogyForUser1.id}`;
             const tokenForAdmin      = factory.createTokenForUser( admin );  
     
-            await supertest
+            const response = await supertest
                 .get( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( res.body ).to.have.own.property( 'UserId' );
-                    expect( res.body.UserId ).to.be.equal( user1.id );
-                });
+                .set( 'Authorization', `Bearer ${tokenForAdmin}` );
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'UserId' );
+            expect( response.body.UserId ).to.be.equal( user1.id );
         });
     });
 
@@ -191,22 +188,19 @@ describe( "#USER CATEGORIES",  () => {
             const tokenForUser1 = factory.createTokenForUser( user1 );
             const routeForUser1 = `/users/${user1.id}/categories`;
             
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 422 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( res.body ).to.have.own.property( 'errors' );
-                    expect( res.body.errors ).to.be.an.array();
-                    expect( res.body.errors ).to.have.lengthOf( 2 );
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
 
-                    expect( res.body.errors[0] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[0].param ).to.be.equal( 'label' );
-                    
-                    expect( res.body.errors[1] ).to.have.own.property( 'param' );
-                    expect( res.body.errors[1].param ).to.be.equal( 'color' );
-                });
+            expect( response.statusCode ).to.be.equal( 422 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'errors' );
+            expect( response.body.errors ).to.be.an.array();
+            expect( response.body.errors ).to.have.lengthOf( 2 );
+            expect( response.body.errors[0] ).to.have.own.property( 'param' );
+            expect( response.body.errors[0].param ).to.be.equal( 'label' );
+            expect( response.body.errors[1] ).to.have.own.property( 'param' );
+            expect( response.body.errors[1].param ).to.be.equal( 'color' );
         });
 
         it( 'A given user can create your own category', async () => {
@@ -217,19 +211,17 @@ describe( "#USER CATEGORIES",  () => {
             
             const categoryData = { label: 'My Category', color: '#ff6600' };
 
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
                 .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .send( categoryData )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 201 );
-                    expect( res.type ).to.be.equal( 'application/json' );
+                .send( categoryData );
 
-                    expect( res.body ).to.have.own.property( 'data' );
-                    expect( res.body.data.id ).to.not.be.equal( undefined );
-                    expect( res.body.data.label ).to.be.equal( categoryData.label );
-                    expect( res.body.data.color ).to.be.equal( categoryData.color );
-                });
+            expect( response.statusCode ).to.be.equal( 201 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'data' );
+            expect( response.body.data.id ).to.not.be.equal( undefined );
+            expect( response.body.data.label ).to.be.equal( categoryData.label );
+            expect( response.body.data.color ).to.be.equal( categoryData.color );
         });
 
         
@@ -242,19 +234,17 @@ describe( "#USER CATEGORIES",  () => {
             
             const categoryData = { label: 'My Category', color: '#ff6600' };
 
-            await supertest
+            const response = await supertest
                 .post( routeForUser1 )
                 .set( 'Authorization', `Bearer ${tokenForAdmin}` )
-                .send( categoryData )
-                .expect( res => {
-                    expect( res.status ).to.be.equal( 201 );
-                    expect( res.type ).to.be.equal( 'application/json' );
+                .send( categoryData );
 
-                    expect( res.body ).to.have.own.property( 'data' );
-                    expect( res.body.data.id ).to.not.be.equal( undefined );
-                    expect( res.body.data.label ).to.be.equal( categoryData.label );
-                    expect( res.body.data.color ).to.be.equal( categoryData.color );
-                });
+            expect( response.statusCode ).to.be.equal( 201 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( response.body ).to.have.own.property( 'data' );
+            expect( response.body.data.id ).to.not.be.equal( undefined );
+            expect( response.body.data.label ).to.be.equal( categoryData.label );
+            expect( response.body.data.color ).to.be.equal( categoryData.color );
         });
 
     });
@@ -312,18 +302,18 @@ describe( "#USER CATEGORIES",  () => {
 
             const categoryData = { label: 'Updated Category', color: '#e4e4e4' };
 
-            await supertest
+            const response = await supertest
                 .put( route )
                 .set( 'Authorization', `Bearer ${token}` )
-                .send( categoryData )
-                .expect( async res => {
-                    const updatedCategory = await models.Category.findOne({ where: { id: category.id } });
-                    
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( updatedCategory.label ).to.be.equal( categoryData.label );
-                    expect( updatedCategory.color ).to.be.equal( categoryData.color );
-                });
+                .send( categoryData );
+
+            const updatedCategory = await models.Category.findOne({ where: { id: category.id } });
+            
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( updatedCategory.label ).to.be.equal( categoryData.label );
+            expect( updatedCategory.color ).to.be.equal( categoryData.color );
+                
         });
 
         it( 'Admins can update categories of any user', async () => {
@@ -337,18 +327,18 @@ describe( "#USER CATEGORIES",  () => {
 
             const categoryData = { label: 'Updated Category 2', color: '#000000' };
 
-            await supertest
+            const response = await supertest
                 .put( route )
                 .set( 'Authorization', `Bearer ${token}` )
-                .send( categoryData )
-                .expect( async res => {
-                    const updatedCategory = await models.Category.findOne({ where: { id: category.id } });
-                    
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( updatedCategory.label ).to.be.equal( categoryData.label );
-                    expect( updatedCategory.color ).to.be.equal( categoryData.color );
-                });
+                .send( categoryData );
+
+            const updatedCategory = await models.Category.findOne({ where: { id: category.id } });
+                
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( updatedCategory.label ).to.be.equal( categoryData.label );
+            expect( updatedCategory.color ).to.be.equal( categoryData.color );
+
         });
     });
 
@@ -407,7 +397,7 @@ describe( "#USER CATEGORIES",  () => {
                 .delete( route )
                 .set( 'Authorization', `Bearer ${token}` )
                 .expect( 409 )
-                expect( 'Content-Type', /json/ );
+                .expect( 'Content-Type', /json/ );
         });
 
         it( 'A given user can delete your own category', async () => {
@@ -418,16 +408,15 @@ describe( "#USER CATEGORIES",  () => {
 
             const route = `/users/${user1.id}/categories/${category.id}`;
 
-            await supertest
+            const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${tokenForUser1}` )
-                .expect( async res => {
-                    const deletedCategory = await models.Category.findOne({ where: { id: category.id } });
-                    
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( deletedCategory ).to.be.equal( null );
-                });
+                .set( 'Authorization', `Bearer ${tokenForUser1}` );
+
+            const deletedCategory = await models.Category.findOne({ where: { id: category.id } });
+            
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( deletedCategory ).to.be.equal( null );
         });
 
         it( 'Admins can delete category of any user', async () => {
@@ -438,16 +427,15 @@ describe( "#USER CATEGORIES",  () => {
             const route = `/users/${user.id}/categories/${category.id}`;
             const token = factory.createTokenForUser( admin );
     
-            return supertest
+            const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${token}` )
-                .expect( async res => {
-                    const deletedCategory = await models.Category.findOne({ where: { id: category.id } });
-                    
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( res.type ).to.be.equal( 'application/json' );
-                    expect( deletedCategory ).to.be.equal( null );
-                });
+                .set( 'Authorization', `Bearer ${token}` );
+
+            const deletedCategory = await models.Category.findOne({ where: { id: category.id } });
+            
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( response.type ).to.be.equal( 'application/json' );
+            expect( deletedCategory ).to.be.equal( null );
         });
     });
 });

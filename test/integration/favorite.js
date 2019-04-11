@@ -160,12 +160,11 @@ describe( '#USER FAVORITES',  () => {
     });
 
     describe( "#CREATE", () => {
-        it( 'Anonymous users cannot create favorites', async () => {
-            const route = `/users/1/favorites`;
-            
-            await supertest
-                .post( route )
-                .expect( 401 );
+        it( 'Anonymous users cannot create favorites', done => {            
+            supertest
+                .post( '/users/1/favorites' )
+                .expect( 401 )
+                .end( done );
         });
 
         it( 'A given user cannot create a favorite with invalid data', async () => {
@@ -242,10 +241,8 @@ describe( '#USER FAVORITES',  () => {
    
     describe( "#UPDATE", () => {
         it( 'Anonymous users cannot update favorites', done => {
-            const route = `/users/1/favorites/1`;
-
             supertest
-                .put( route )
+                .put( '/users/1/favorites/1' )
                 .expect( 401 )
                 .end( done );
         });
@@ -255,7 +252,7 @@ describe( '#USER FAVORITES',  () => {
             const user2     = await factory.createUser();
 
             const favorite2 = await factory.createFavorite( user2.id );
-            const routeForFavorite2     = `/users/${user1.id}/favorites/${favorite2.id}`;
+            const routeForFavorite2 = `/users/${user1.id}/favorites/${favorite2.id}`;
             const tokenForUser1     = factory.createTokenForUser( user1 );
 
             await supertest
@@ -287,18 +284,17 @@ describe( '#USER FAVORITES',  () => {
             const route     = `/users/${user.id}/favorites/${favorite.id}`;
             const token     = factory.createTokenForUser( user );
 
-            await supertest
+            const response = await supertest
                 .put( route )
                 .set( 'Authorization', `Bearer ${token}` )
-                .send( { label: 'Updated Label', type: 0, value: 7.77 } )
-                .expect( async res => {
-                    const updatedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+                .send( { label: 'Updated Label', type: 0, value: 7.77 } );
 
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( updatedFavorite.label ).to.be.equal( 'Updated Label' );
-                    expect( updatedFavorite.type ).to.be.equal( 0 );
-                    expect( updatedFavorite.value ).to.be.equal( '7.77' );
-                });
+            const updatedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( updatedFavorite.label ).to.be.equal( 'Updated Label' );
+            expect( updatedFavorite.type ).to.be.equal( 0 );
+            expect( updatedFavorite.value ).to.be.equal( '7.77' );
         });
 
 
@@ -310,18 +306,18 @@ describe( '#USER FAVORITES',  () => {
             const route     = `/users/${user.id}/favorites/${favorite.id}`;
             const token     = factory.createTokenForUser( admin );
 
-            await supertest
+            const response = await supertest
                 .put( route )
                 .set( 'Authorization', `Bearer ${token}` )
-                .send( { label: 'Updated Label', type: 0, value: 7.77 } )
-                .expect( async res => {
-                    const updatedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+                .send( { label: 'Updated Label', type: 0, value: 7.77 } );
+  
+            const updatedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
 
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( updatedFavorite.label ).to.be.equal( 'Updated Label' );
-                    expect( updatedFavorite.type ).to.be.equal( 0 );
-                    expect( updatedFavorite.value ).to.be.equal( '7.77' );
-                });
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( updatedFavorite.label ).to.be.equal( 'Updated Label' );
+            expect( updatedFavorite.type ).to.be.equal( 0 );
+            expect( updatedFavorite.value ).to.be.equal( '7.77' );
+    
         });
     });
 
@@ -368,14 +364,14 @@ describe( '#USER FAVORITES',  () => {
             const route = `/users/${user.id}/favorites/${favorite.id}`;
             const token = factory.createTokenForUser( user );
 
-            await supertest
+             const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${token}` )
-                .expect( async res => {
-                    const deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( deletedFavorite ).to.be.equal( null );
-                });
+                .set( 'Authorization', `Bearer ${token}` );
+
+            const deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+            
+            expect( response.status ).to.be.equal( 200 );
+            expect( deletedFavorite ).to.be.equal( null );
         });
 
         it( 'Admins can delete favorites from any user', async () => {
@@ -386,14 +382,14 @@ describe( '#USER FAVORITES',  () => {
             const route = `/users/${user.id}/favorites/${favorite.id}`;
             const token = factory.createTokenForUser( admin );
     
-            await supertest
+            const response = await supertest
                 .delete( route )
-                .set( 'Authorization', `Bearer ${token}` )
-                .expect( async res => {
-                    const deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
-                    expect( res.status ).to.be.equal( 200 );
-                    expect( deletedFavorite ).to.be.equal( null );
-                });
+                .set( 'Authorization', `Bearer ${token}` );
+
+            const deletedFavorite = await models.Favorite.findOne({ where: { id: favorite.id } });
+            
+            expect( response.statusCode ).to.be.equal( 200 );
+            expect( deletedFavorite ).to.be.equal( null );
         });
     });
 });
