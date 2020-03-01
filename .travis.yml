@@ -4,6 +4,8 @@ services:
   - mysql
 language: node_js
 node_js:
+  - node
+  - 'lts/*'
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS mfcapi;'
 install:
