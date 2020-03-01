@@ -12,7 +12,7 @@ chai.use(assertArrays);
 const models    = require( '../../models' );
 const factory   = require( '../helpers/factory.js' );
 const databaseHelper   = require( '../helpers/db.js' );
-const { secret, ttl, refreshSecret, refreshTTL }  = require( '../../config/jwt' )[ process.env.NODE_ENV || 'development' ];
+const { secret, ttl, refreshSecret, refreshTTL }  = require( '../../config/jwt' );
 
 const routes = {
     signin: '/auth/signin',
