@@ -5,7 +5,7 @@ const jwt                   = require( 'jsonwebtoken' );
 
 const randomDigits          = require( '../modules/random-numbers' );
 const repository            = require( '../repositories/user' );
-const jwtConfig             = require( '../config/jwt' )[ process.env.NODE_ENV || 'development' ];
+const jwtConfig             = require( '../config/jwt' );
 const mailer                = require( '../modules/mailer' );
 
 exports.Signup = async ( req, res, next ) => {

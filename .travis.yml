@@ -4,7 +4,7 @@ services:
   - mysql
 language: node_js
 node_js:
-  - "8"
+  - 12
 before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS mfcapi_test;'
 install:

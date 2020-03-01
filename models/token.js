@@ -1,6 +1,6 @@
 'use strict';
 
-const jwtConfig = require( '../config/jwt' )[ process.env.NODE_ENV || 'development' ];
+const jwtConfig = require( '../config/jwt' );
 
 module.exports = (sequelize, DataTypes) => {
   const Token = sequelize.define('Token', {

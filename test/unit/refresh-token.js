@@ -8,7 +8,7 @@ const expect        = chai.expect;
 
 const models    = require( '../../models' );
 const factory   = require( '../helpers/factory.js' );
-const { secret, refreshSecret, refreshTTL }  = require( '../../config/jwt' )[ process.env.NODE_ENV || 'development' ];
+const { secret, refreshSecret, refreshTTL }  = require( '../../config/jwt' );
 const databaseHelper    = require( '../helpers/db.js' );
 
 

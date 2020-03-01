@@ -15,9 +15,10 @@ This use envs to controle sensive data of application and this envs area used in
 
 | Env Prefix | Description |
 | --- | --- |
-| DEV_ | env vars that are used in DEVELOPMENT environment |
-| CI_ | env vars that are used in TEST environment (including travis) |
-| PROD_ | env vars that are used in PRODUCTION environment |
+| DB_ | env vars that are used by Sequelize ORM |
+| JWT_ | env vars that are used JWT configs |
+| MAIL_ | env vars that are used mail configs |
+| SITE_ | env vars that are used in mail operations referencied to SPA (frontend)|
 
 ### Database Envs
 Open file `config/config.js` to see more details about database credentials.

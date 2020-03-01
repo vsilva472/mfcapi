@@ -1,24 +1,12 @@
-module.exports = {
-    development: {
-      username: 'root',
-      password: null,
-      database: 'mfcapi_dev',
-      host: '127.0.0.1',
-      dialect: 'mysql'
-    },
-    test: {
-      username: process.env.CI_DB_USERNAME,
-      password: process.env.CI_DB_PASSWORD,
-      database: process.env.CI_DB_NAME,
-      host: '127.0.0.1',
-      dialect: 'mysql',
-      logging: false
-    },
-    production: {
-      username: process.env.PROD_DB_USERNAME,
-      password: process.env.PROD_DB_PASSWORD,
-      database: process.env.PROD_DB_NAME,
-      host: process.env.PROD_DB_HOSTNAME,
-      dialect: 'mysql'
-    }
+const config = {
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  host: process.env.DB_HOSTNAME,
+  dialect: process.env.DB_DIALECT || 'mysql',
+  operatorsAliases: false
 };
+
+if (process.env.DB_DISABLE_LOG) config['logging'] = false;
+
+module.exports = config;
