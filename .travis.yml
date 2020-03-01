@@ -4,9 +4,8 @@ services:
   - mysql
 language: node_js
 node_js:
-  - "12.14.1"
 before_install:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS mfcapi_test;'
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS mfcapi;'
 install:
   - npm install
 notifications:
