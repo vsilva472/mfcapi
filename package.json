@@ -8,11 +8,11 @@
     "test-unit": "node_modules/mocha/bin/mocha test/unit/**.js --timeout=100000 --exit",
     "test-integration": "node_modules/mocha/bin/mocha test/integration/**.js --timeout=100000 --exit",
     "test": "npm run migrate&& npm run test-integration&& npm run test-unit",
-    "test-local": "export $(cat .env | xargs) && npm run migrate&& npm run test-integration&& npm run test-unit",
+    "test-local": "export $(cat .env.testing | xargs) && npm run migrate&& npm run test-integration&& npm run test-unit",
     "start:dev": "node -r dotenv/config ./bin/www"
   },
   "dependencies": {
-    "bcrypt": "^3.0.8",
+    "bcrypt": "^5.0.1",
     "cookie-parser": "^1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.0",
@@ -22,8 +22,8 @@
     "morgan": "~1.9.0",
     "mysql2": "^1.7.0",
     "nodemailer": "^4.7.0",
-    "npm": "^6.14.6",
-    "pug": "^2.0.4",
+    "npm": "^7.11.2",
+    "pug": "^3.0.2",
     "sequelize": "^5.21.5",
     "sequelize-cli": "^5.5.1"
   },
@@ -31,8 +31,8 @@
     "chai": "^4.2.0",
     "chai-arrays": "^2.0.0",
     "dotenv": "^8.2.0",
-    "mocha": "^5.2.0",
-    "nodemon": "^1.19.4",
+    "mocha": "^8.3.2",
+    "nodemon": "^2.0.7",
     "sqlite3": "^4.1.1",
     "supertest": "^3.4.2"
   }
