@@ -13,7 +13,6 @@ exports.create = async ( data ) => {
 };
 
 exports.findOne = async ( where ) => {
-    // const Favorite = await Favorite.findOne( { where: where } );
     const favorite = await Favorite.findOne({ where: where });
     return favorite;
 };

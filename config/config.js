@@ -3,8 +3,7 @@ const config = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   host: process.env.DB_HOSTNAME,
-  dialect: process.env.DB_DIALECT || 'mysql',
-  operatorsAliases: false
+  dialect: process.env.DB_DIALECT || 'mysql'
 };
 
 if (process.env.DB_DISABLE_LOG) config['logging'] = false;

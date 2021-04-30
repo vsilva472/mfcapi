@@ -1,5 +1,6 @@
 'use strict';
 
+const { Op }    = require("sequelize");
 const Entry     = require( '../models' ).Entry;
 const Category  = require( '../models' ).Category;
 
@@ -8,7 +9,7 @@ exports.allByUserIdAndPeriod = async ( userId, start, end ) => {
         where: {
             UserId: userId,
             registeredAt: {
-                '$between': [start, end],
+                [Op.between]: [start, end],
             }
         }
     });
