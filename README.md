@@ -5,6 +5,15 @@
 
 MFCApi is a api to be consumed by My Financial Control Frontend
 
+## Development with
+
+| Item | Version |
+| --- | --- |
+| OS | ubuntu 22.04 |
+| node | 20.14.0 |
+| npm | 10.7.0 |
+| MySQL | 8+ |
+
 ## Installation
 - Clone this repository `git clone https://github.com/vsilva472/mfcapi.git`
 - In a terminal navigate to repository folder `$ cd <PATH TO REPOSITORY>/mfcapi`
@@ -73,11 +82,11 @@ Run migrations with command `$ node_modules\.bin\sequelize db:migrate --env=XXXX
 
 **Note** To migration work you should setup env vars with base on environment you want to build.
 
-### Donation
-Help me to improve this project sending me some **HTMLCOIN**  
-Wallet: **[HqgaiK6T1o2JP4p3p34CZp2g3XnSsSdCXp](htmlcoin:HqgaiK6T1o2JP4p3p34CZp2g3XnSsSdCXp?label=Doa%C3%A7%C3%B5es%20Github)**  
-  
-![Doar HTMLCoin](https://www.viniciusdesouza.com.br/img/htmlcoin.png)
+### Testing
+1. Create database testing
+2. Copy `.env` to `.env.testing` and configure as needed
+3. Add `DB_DISABLE_LOG=true` right after `DB_DIALECT=mysql` config.
+3. Run `npm run test-local` command.
 
 ### License
 MIT
